@@ -1,0 +1,73 @@
+name: compile-for-platform
+on: [push]
+jobs:
+  compile-for-windows-ubuntu-platform:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [windows-latest, ubuntu-latest]
+        compile-profile: [dev, release]
+    runs-on: ${{matrix.runs-on}}
+    steps:
+      - run: sudo apt-get install -y libasound2-dev portaudio19-dev build-essential libpulse-dev libdbus-1-dev libudev-dev pkg-config
+        if: ${{matrix.runs-on == 'ubuntu-latest'}}
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --profile ${{matrix.compile-profile}} --all-features
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{github.event.repository.name}}-${{matrix.runs-on}}_${{matrix.compile-profile}}
+          path: | 
+                  target/release/bevy_template
+                  target/release/bevy_template.exe
+        if: ${{matrix.compile-profile == 'release'}}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{github.event.repository.name}}-${{matrix.runs-on}}_${{matrix.compile-profile}}
+          path: | 
+                  target/debug/bevy_template
+                  target/debug/bevy_template.exe
+        if: ${{matrix.compile-profile == 'dev'}}
+  compile-for-apple:
+    strategy:
+      fail-fast: false
+      matrix:
+        compile-profile: [dev, release]
+        target: [x86_64-apple-darwin, aarch64-apple-darwin]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          default: true
+          target: ${{matrix.target}}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --profile ${{matrix.compile-profile}}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{github.event.repository.name}}-${{matrix.target}}_${{matrix.compile-profile}}
+          path: target/release/bevy_template
+        if: ${{matrix.compile-profile == 'release'}}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{github.event.repository.name}}-${{matrix.target}}_${{matrix.compile-profile}}
+          path: target/debug/bevy_template
+        if: ${{matrix.compile-profile == 'dev'}}
+  upload-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/upload-artifact@v3
+        with:
+          name: assets
+          path: assets
+        
