@@ -2,22 +2,29 @@ use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
+use derive_more::Display;
 use leafwing_input_manager::{
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap},
     Actionlike, InputManagerBundle,
 };
 
+mod input_management;
+use input_management::{binding_window_system, controls_window, toggle_settings, InputSettings};
+
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
 pub enum PlayerAction {
+    OpenKeyBinds,
+    ToggleInspector,
     Scream,
 }
 
 fn main() {
     App::new()
+        //Bevy setup
         .insert_resource(WindowDescriptor {
             width: HEIGHT * RESOLUTION,
             height: HEIGHT,
@@ -27,18 +34,28 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        //Egui (must be before inspector)
+        .add_plugin(EguiPlugin)
+        //Egui Inspector
         .insert_resource(WorldInspectorParams {
             enabled: false,
             ..Default::default()
         })
-        .add_system(toggle_inspector)
-        .add_plugin(EguiPlugin)
         .add_plugin(WorldInspectorPlugin::new())
+        .add_system(toggle_inspector)
+        //Mod picking
         .add_plugins(DefaultPickingPlugins)
+        //Input management and remapping (TODO move to plugin)
         .add_plugin(InputManagerPlugin::<PlayerAction>::default())
+        .insert_resource(InputSettings::default())
+        .add_system(controls_window)
+        .add_system(binding_window_system)
+        .add_system(toggle_settings)
+        //Test scene spawning
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_test_map)
         .add_startup_system(spawn_player)
+        //Egui test
         .add_system(ui_example)
         .run();
 }
@@ -46,7 +63,11 @@ fn main() {
 fn spawn_player(mut commands: Commands) {
     commands
         .spawn_bundle(InputManagerBundle::<PlayerAction> {
-            input_map: InputMap::new([(KeyCode::Space, PlayerAction::Scream)]),
+            input_map: InputMap::new([
+                (KeyCode::Space, PlayerAction::Scream),
+                (KeyCode::Escape, PlayerAction::OpenKeyBinds),
+                (KeyCode::Grave, PlayerAction::ToggleInspector),
+            ]),
             ..default()
         })
         .insert(Name::new("Player"));
@@ -124,10 +145,12 @@ fn spawn_camera(mut commands: Commands) {
 }
 
 fn toggle_inspector(
-    input: ResMut<Input<KeyCode>>,
     mut window_params: ResMut<WorldInspectorParams>,
+    actions: Query<&ActionState<PlayerAction>>,
 ) {
-    if input.just_pressed(KeyCode::Grave) {
+    let actions = actions.single();
+
+    if actions.just_pressed(PlayerAction::ToggleInspector) {
         window_params.enabled = !window_params.enabled
     }
 }
