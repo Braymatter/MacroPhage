@@ -62,41 +62,52 @@ fn ui_example(mut egui_context: ResMut<EguiContext>, actions: Query<&ActionState
     }
 }
 
-fn spawn_test_map(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
+fn spawn_test_map(mut commands: Commands, assets: Res<AssetServer>) {
+    let space_ship = assets.load("SpaceShip.gltf#Scene0");
+    let asteroid = assets.load("VoxelAsteroid.gltf#Scene0");
+
     commands
         .spawn_bundle(TransformBundle::default())
         .insert(Name::new("Test Scene"))
         .with_children(|commands| {
+            // I hate this nesting
             commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Plane { size: 5.0 })),
-                    material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-                    ..default()
-                })
-                .insert(Name::new("Placeholder_Ground"));
-
+                .spawn_bundle(TransformBundle::default())
+                .insert(Name::new("SpaceShip"))
+                .with_children(|commands| {
+                    commands.spawn_scene(space_ship);
+                });
             commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                    transform: Transform::from_xyz(0.0, 0.5, 0.0),
-                    ..default()
-                })
-                .insert_bundle(PickableBundle::default())
-                .insert(Name::new("Placeholder_Cube"));
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                    -15., 15., 15.,
+                )))
+                .insert(Name::new("Asteroid"))
+                .with_children(|commands| {
+                    commands.spawn_scene(asteroid);
+                });
 
             commands
                 .spawn_bundle(PointLightBundle {
                     point_light: PointLight {
-                        intensity: 1500.0,
+                        intensity: 500000.0,
+                        range: 100.0,
                         shadows_enabled: true,
                         ..default()
                     },
-                    transform: Transform::from_xyz(4.0, 8.0, 4.0),
+                    transform: Transform::from_xyz(54.0, 58.0, 54.0),
+                    ..default()
+                })
+                .insert(Name::new("Light"));
+
+            commands
+                .spawn_bundle(PointLightBundle {
+                    point_light: PointLight {
+                        intensity: 300000.0,
+                        range: 100.0,
+                        shadows_enabled: true,
+                        ..default()
+                    },
+                    transform: Transform::from_xyz(-54.0, 58.0, -54.0),
                     ..default()
                 })
                 .insert(Name::new("Light"));
@@ -106,7 +117,7 @@ fn spawn_test_map(
 fn spawn_camera(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(3.0, 3.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(60.0, 60.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         })
         .insert_bundle(PickingCameraBundle::default());
