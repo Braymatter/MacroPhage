@@ -20,3 +20,5 @@ bevy_egui = "0.14"
 bevy_mod_picking = "0.7"
 leafwing-input-manager = "0.4"
 derive_more = "*"
+# bevy_renet = {git="https://github.com/Braymatter/renet-fork", branch="master"}
+bevy_punchthrough = {git="https://github.com/Braymatter/bevy_punchthrough", branch="master"}
