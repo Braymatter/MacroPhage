@@ -98,9 +98,9 @@ pub struct Recombinator {
 /// Describes a discrete location on the map that can be connected to other locations
 #[derive(Component, Serialize, Deserialize)]
 pub struct Node {
-    id: NodeId,
-    position: Vec3,
-    tenant: NodeTenant,
+    pub id: NodeId,
+    pub position: Vec3,
+    pub tenant: NodeTenant,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -144,7 +144,7 @@ pub struct Occupant(Force, PhageType);
 
 /// Defines a relationship between two cells
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Vector(NodeId, NodeId);
+pub struct Vector(pub NodeId, pub NodeId);
 
 impl Vector {
 	pub fn new(id_1: NodeId, id_2: NodeId) -> Vector {
@@ -278,7 +278,9 @@ mod tests {
 
 		let node_1 = map.create_node(Vec3::ZERO);
 		let node_2 = map.create_node(Vec3::new(1., 2., 3.));
-		let node_3 = map.create_node(Vec3::new(2., 3., 4.));
+		let node_3 = map.create_node(Vec3::new(-2., -3., 4.));
+		let node_4 = map.create_node(Vec3::new(-20., -30., 40.));
+		map.add_vector(Vector::new(node_4, node_1)).unwrap();
 		
 		map.add_vector(Vector::new(node_1, node_2)).unwrap();
 		map.remove_vector(Vector::new(node_1, node_2)).unwrap();
@@ -290,8 +292,7 @@ mod tests {
 		map.add_vector(Vector::new(node_1, node_2)).unwrap();
 		map.remove_vector(Vector::new(node_3, node_2)).unwrap();
 
-		// The only remaining vectors should be 1,3 and 1,2
-		assert!(map.vectors.len()==2);
+		assert!(map.vectors.len()==3);
 
         let map_json = serde_json::to_string(&map).unwrap();
         let mut input = File::create("assets/test_map.json").unwrap();

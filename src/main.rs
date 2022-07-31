@@ -1,5 +1,6 @@
 use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
+use bevy_flycam::{NoCameraPlayerPlugin, FlyCam};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use derive_more::Display;
@@ -21,11 +22,6 @@ pub enum PlayerAction {
     OpenKeyBinds,
     ToggleInspector,
     Scream,
-}
-
-/// Actions initiated by a KeyPress
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
-pub enum PlayerGameActions {
     /// Selects the players Nexus
     SelectNexus,
 
@@ -33,11 +29,11 @@ pub enum PlayerGameActions {
     SelectPrevNode,
 
     /// Selects the next node (after select previous has been used)
-    SelectNextNode, 
+    SelectNextNode,
 
     /// Selects a replicator, when pressed again selects the next replicator in the list, loops back to the beginning of the list
     SelectReplicator,
-    
+
     /// Opens the Qubit Dialog
     OpenQubitTradePanel,
 
@@ -45,12 +41,21 @@ pub enum PlayerGameActions {
     TriggerRecombinator,
 
     OpenOptionsMenu,
-    
+
     HotKey1,
     HotKey2,
     HotKey3,
     HotKey4,
     
+    PanForward,
+    PanBackwards,
+    PanLeft,
+    PanRight,
+}
+
+/// Actions initiated by a KeyPress
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
+pub enum PlayerGameAction {
 
 }
 
@@ -79,6 +84,8 @@ fn main() {
         .add_plugins(DefaultPickingPlugins)
         //Input management and remapping (TODO move to plugin)
         .add_plugin(InputManagerPlugin::<PlayerAction>::default())
+        .add_plugin(InputManagerPlugin::<PlayerGameAction>::default())
+        .add_plugin(NoCameraPlayerPlugin)
         .insert_resource(InputSettings::default())
         .add_system(controls_window)
         .add_system(binding_window_system)
@@ -89,6 +96,7 @@ fn main() {
         .add_startup_system(spawn_player)
         //Egui test
         .add_system(ui_example)
+        //Camera
         .run();
 }
 
@@ -99,6 +107,10 @@ fn spawn_player(mut commands: Commands) {
                 (KeyCode::Space, PlayerAction::Scream),
                 (KeyCode::Escape, PlayerAction::OpenKeyBinds),
                 (KeyCode::Grave, PlayerAction::ToggleInspector),
+                (KeyCode::W, PlayerAction::PanForward),
+                (KeyCode::S, PlayerAction::PanBackwards),
+                (KeyCode::A, PlayerAction::PanLeft),
+                (KeyCode::D, PlayerAction::PanRight),
             ]),
             ..default()
         })
@@ -114,8 +126,35 @@ fn ui_example(mut egui_context: ResMut<EguiContext>, actions: Query<&ActionState
         });
     }
 }
+fn camera_controls(actions: Query<&ActionState<PlayerAction>>, mut camera: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
+    let mut transform = camera.single_mut();
+    let actions = actions.single();
 
-fn spawn_test_map(mut commands: Commands, assets: Res<AssetServer>) {
+    if actions.pressed(PlayerAction::PanForward) {
+        let pos = transform.forward() * time.delta_seconds();
+        transform.translation += pos;
+    }
+    if actions.pressed(PlayerAction::PanBackwards) {
+        let pos = transform.forward() * time.delta_seconds();
+        transform.translation -= pos;
+    }
+    if actions.pressed(PlayerAction::PanLeft) {
+        let pos = transform.left() * time.delta_seconds();
+        transform.translation += pos;
+    }
+    if actions.pressed(PlayerAction::PanRight) {
+        let pos = transform.left() * time.delta_seconds();
+        transform.translation -= pos;
+    }
+    
+}
+
+fn spawn_test_map(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     let path = "assets/test_map.json";
 
     use std::fs::File;
@@ -125,16 +164,61 @@ fn spawn_test_map(mut commands: Commands, assets: Res<AssetServer>) {
 
     let map: Map = serde_json::from_reader(reader).unwrap();
 
-    for node in map.nodes.iter() {
+    let map_ent = commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(Name::new("Map"))
+        .id();
+    let mut node_ents = Vec::default();
+    for node in map.nodes.values() {
+        node_ents.push(
+            commands
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 1.0,
+                        subdivisions: 5,
+                    })),
+                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                    transform: Transform::from_translation(node.position),
+                    ..default()
+                })
+                .insert(Name::new("Node"))
+                .id(),
+        );
     }
+    let mut vector_ents = Vec::default();
+    for vector in map.vectors.iter() {
+        let node_0 = map.nodes.get(&vector.0).unwrap();
+        let node_1 = map.nodes.get(&vector.1).unwrap();
+
+        let pos = (node_0.position + node_1.position) / 2.0;
+        let mut transform = Transform::from_translation(pos).looking_at(node_1.position, Vec3::Y);
+        transform.scale.z = Vec3::distance(node_0.position, node_1.position) * 2.0;
+
+        vector_ents.push(
+            commands
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube {
+                        size: 0.5,
+                    })),
+                    material: materials.add(Color::rgb(0.8, 0.1, 0.1).into()),
+                    transform,
+                    ..default()
+                })
+                .insert(Name::new("Vector"))
+                .id(),
+        );
+    }
+    commands.entity(map_ent).push_children(&node_ents);
+    commands.entity(map_ent).push_children(&vector_ents);
 }
 
 fn spawn_camera(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(60.0, 60.0, 60.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(4.0, 5.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         })
+        .insert(FlyCam)
         .insert_bundle(PickingCameraBundle::default());
 }
 
