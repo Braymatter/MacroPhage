@@ -20,7 +20,7 @@ bevy_egui = "0.14"
 bevy_mod_picking = "0.7"
 leafwing-input-manager = "0.4"
 derive_more = "*"
-bevy_punchthrough = {git="https://github.com/Braymatter/bevy_punchthrough", branch="master"}
+bevy_punchthrough = {path="../bevy_punchthrough"}
 serde = "1.0.140"
 serde_json = "1.0.82"
 bevy_flycam = "*"

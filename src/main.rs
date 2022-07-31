@@ -1,16 +1,22 @@
+use std::{
+    net::{SocketAddr, SocketAddrV4},
+    str::FromStr,
+};
+
 use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
-use bevy_flycam::{NoCameraPlayerPlugin, FlyCam};
+use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
+use bevy_punchthrough::client::{PunchthroughClientPlugin, RequestSwap};
+use bevy_template::map::spawn_test_map;
 use derive_more::Display;
 use leafwing_input_manager::{
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap},
     Actionlike, InputManagerBundle,
 };
-mod lib;
-use lib::Map;
+
 mod input_management;
 use input_management::{binding_window_system, controls_window, toggle_settings, InputSettings};
 
@@ -46,7 +52,7 @@ pub enum PlayerAction {
     HotKey2,
     HotKey3,
     HotKey4,
-    
+
     PanForward,
     PanBackwards,
     PanLeft,
@@ -55,12 +61,11 @@ pub enum PlayerAction {
 
 /// Actions initiated by a KeyPress
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
-pub enum PlayerGameAction {
-
-}
+pub enum PlayerGameAction {}
 
 fn main() {
-    App::new()
+    let mut app = App::new();
+    app
         //Bevy setup
         .insert_resource(WindowDescriptor {
             width: HEIGHT * RESOLUTION,
@@ -84,7 +89,6 @@ fn main() {
         .add_plugins(DefaultPickingPlugins)
         //Input management and remapping (TODO move to plugin)
         .add_plugin(InputManagerPlugin::<PlayerAction>::default())
-        .add_plugin(InputManagerPlugin::<PlayerGameAction>::default())
         .add_plugin(NoCameraPlayerPlugin)
         .insert_resource(InputSettings::default())
         .add_system(controls_window)
@@ -94,10 +98,40 @@ fn main() {
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_test_map)
         .add_startup_system(spawn_player)
+        .add_system(renet_test_controls)
         //Egui test
-        .add_system(ui_example)
-        //Camera
-        .run();
+        .add_system(ui_example);
+
+    build_punchthrough_plugin(&mut app);
+
+    app.run();
+}
+
+fn build_punchthrough_plugin(app: &mut App) {
+    let v4_socket = match SocketAddrV4::from_str("127.0.0.1:5001") {
+        Ok(v4) => v4,
+        Err(e) => {
+            error!("Could not construct Local V4 Address {e:#?}");
+            return;
+        }
+    };
+
+    let local_socket: SocketAddr = SocketAddr::V4(v4_socket);
+
+    let v4_pt_socket = match SocketAddrV4::from_str("127.0.0.1:5000") {
+        Ok(sock) => sock,
+        Err(e) => {
+            error!("Error creating socket address for punchthrough service {e:#?}");
+            return;
+        }
+    };
+
+    let pt_socket = SocketAddr::V4(v4_pt_socket);
+
+    app.add_plugin(PunchthroughClientPlugin {
+        local_socket,
+        punchthrough_server: pt_socket,
+    });
 }
 
 fn spawn_player(mut commands: Commands) {
@@ -111,6 +145,10 @@ fn spawn_player(mut commands: Commands) {
                 (KeyCode::S, PlayerAction::PanBackwards),
                 (KeyCode::A, PlayerAction::PanLeft),
                 (KeyCode::D, PlayerAction::PanRight),
+                (KeyCode::Key1, PlayerAction::HotKey1),
+                (KeyCode::Key2, PlayerAction::HotKey2),
+                (KeyCode::Key3, PlayerAction::HotKey3),
+                (KeyCode::Key4, PlayerAction::HotKey4),
             ]),
             ..default()
         })
@@ -126,90 +164,16 @@ fn ui_example(mut egui_context: ResMut<EguiContext>, actions: Query<&ActionState
         });
     }
 }
-fn camera_controls(actions: Query<&ActionState<PlayerAction>>, mut camera: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
-    let mut transform = camera.single_mut();
-    let actions = actions.single();
 
-    if actions.pressed(PlayerAction::PanForward) {
-        let pos = transform.forward() * time.delta_seconds();
-        transform.translation += pos;
-    }
-    if actions.pressed(PlayerAction::PanBackwards) {
-        let pos = transform.forward() * time.delta_seconds();
-        transform.translation -= pos;
-    }
-    if actions.pressed(PlayerAction::PanLeft) {
-        let pos = transform.left() * time.delta_seconds();
-        transform.translation += pos;
-    }
-    if actions.pressed(PlayerAction::PanRight) {
-        let pos = transform.left() * time.delta_seconds();
-        transform.translation -= pos;
-    }
-    
-}
-
-fn spawn_test_map(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+fn renet_test_controls(
+    actions: Query<&ActionState<PlayerAction>>,
+    mut request_host_ev: EventWriter<RequestSwap>,
 ) {
-    let path = "assets/test_map.json";
-
-    use std::fs::File;
-    let file = File::open(path).unwrap();
-    use std::io::BufReader;
-    let reader = BufReader::new(file);
-
-    let map: Map = serde_json::from_reader(reader).unwrap();
-
-    let map_ent = commands
-        .spawn_bundle(TransformBundle::default())
-        .insert(Name::new("Map"))
-        .id();
-    let mut node_ents = Vec::default();
-    for node in map.nodes.values() {
-        node_ents.push(
-            commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 1.0,
-                        subdivisions: 5,
-                    })),
-                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                    transform: Transform::from_translation(node.position),
-                    ..default()
-                })
-                .insert(Name::new("Node"))
-                .id(),
-        );
+    let actions = actions.single();
+    if actions.just_pressed(PlayerAction::HotKey1) {
+        println!("Requesting New Host Lobby");
+        request_host_ev.send(RequestSwap::HostLobby);
     }
-    let mut vector_ents = Vec::default();
-    for vector in map.vectors.iter() {
-        let node_0 = map.nodes.get(&vector.0).unwrap();
-        let node_1 = map.nodes.get(&vector.1).unwrap();
-
-        let pos = (node_0.position + node_1.position) / 2.0;
-        let mut transform = Transform::from_translation(pos).looking_at(node_1.position, Vec3::Y);
-        transform.scale.z = Vec3::distance(node_0.position, node_1.position) * 2.0;
-
-        vector_ents.push(
-            commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube {
-                        size: 0.5,
-                    })),
-                    material: materials.add(Color::rgb(0.8, 0.1, 0.1).into()),
-                    transform,
-                    ..default()
-                })
-                .insert(Name::new("Vector"))
-                .id(),
-        );
-    }
-    commands.entity(map_ent).push_children(&node_ents);
-    commands.entity(map_ent).push_children(&vector_ents);
 }
 
 fn spawn_camera(mut commands: Commands) {
