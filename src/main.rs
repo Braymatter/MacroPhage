@@ -8,8 +8,8 @@ use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
-use bevy_punchthrough::client::{PunchthroughClientPlugin, RequestSwap, PunchthroughEvent};
-use bevy_renet::RenetClientPlugin;
+use bevy_punchthrough::client::{PunchthroughClientPlugin, PunchthroughEvent, RequestSwap};
+use bevy_punchthrough::bevy_renet::{renet::RenetError, RenetClientPlugin};
 use bevy_template::map::spawn_test_map;
 use derive_more::Display;
 use leafwing_input_manager::{
@@ -102,6 +102,7 @@ fn main() {
         .add_startup_system(spawn_player)
         .add_system(monitor_punchthrough_events)
         .add_system(renet_test_controls)
+        .add_system(panic_on_error_system)
         //Egui test
         .add_system(ui_example);
 
@@ -202,5 +203,14 @@ fn toggle_inspector(
 
     if actions.just_pressed(PlayerAction::ToggleInspector) {
         window_params.enabled = !window_params.enabled
+    }
+}
+
+// If any error is found we just panic
+// This should probably change the game state to the main screen
+// and open a pop up with a network error
+fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
+    for e in renet_error.iter() {
+        panic!("{}", e);
     }
 }
