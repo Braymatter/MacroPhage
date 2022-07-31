@@ -8,7 +8,8 @@ use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
-use bevy_punchthrough::client::{PunchthroughClientPlugin, RequestSwap};
+use bevy_punchthrough::client::{PunchthroughClientPlugin, RequestSwap, PunchthroughEvent};
+use bevy_renet::RenetClientPlugin;
 use bevy_template::map::spawn_test_map;
 use derive_more::Display;
 use leafwing_input_manager::{
@@ -84,6 +85,7 @@ fn main() {
             ..Default::default()
         })
         .add_plugin(WorldInspectorPlugin::new())
+        .add_plugin(RenetClientPlugin)
         .add_system(toggle_inspector)
         //Mod picking
         .add_plugins(DefaultPickingPlugins)
@@ -98,6 +100,7 @@ fn main() {
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_test_map)
         .add_startup_system(spawn_player)
+        .add_system(monitor_punchthrough_events)
         .add_system(renet_test_controls)
         //Egui test
         .add_system(ui_example);
@@ -176,6 +179,11 @@ fn renet_test_controls(
     }
 }
 
+fn monitor_punchthrough_events(mut pt_events: EventReader<PunchthroughEvent>){
+    for ev in pt_events.iter(){
+        info!("Received PT Event {ev:#?}");
+    }
+}
 fn spawn_camera(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
