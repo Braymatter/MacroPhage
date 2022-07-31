@@ -8,7 +8,8 @@ use leafwing_input_manager::{
     prelude::{ActionState, InputMap},
     Actionlike, InputManagerBundle,
 };
-
+mod lib;
+use lib::Map;
 mod input_management;
 use input_management::{binding_window_system, controls_window, toggle_settings, InputSettings};
 
@@ -20,6 +21,37 @@ pub enum PlayerAction {
     OpenKeyBinds,
     ToggleInspector,
     Scream,
+}
+
+/// Actions initiated by a KeyPress
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
+pub enum PlayerGameActions {
+    /// Selects the players Nexus
+    SelectNexus,
+
+    /// Selects the previous node that was selected if applicable
+    SelectPrevNode,
+
+    /// Selects the next node (after select previous has been used)
+    SelectNextNode, 
+
+    /// Selects a replicator, when pressed again selects the next replicator in the list, loops back to the beginning of the list
+    SelectReplicator,
+    
+    /// Opens the Qubit Dialog
+    OpenQubitTradePanel,
+
+    /// Triggers the Selected Recombinator
+    TriggerRecombinator,
+
+    OpenOptionsMenu,
+    
+    HotKey1,
+    HotKey2,
+    HotKey3,
+    HotKey4,
+    
+
 }
 
 fn main() {
@@ -84,55 +116,17 @@ fn ui_example(mut egui_context: ResMut<EguiContext>, actions: Query<&ActionState
 }
 
 fn spawn_test_map(mut commands: Commands, assets: Res<AssetServer>) {
-    let space_ship = assets.load("SpaceShip.gltf#Scene0");
-    let asteroid = assets.load("VoxelAsteroid.gltf#Scene0");
+    let path = "assets/test_map.json";
 
-    commands
-        .spawn_bundle(TransformBundle::default())
-        .insert(Name::new("Test Scene"))
-        .with_children(|commands| {
-            // I hate this nesting
-            commands
-                .spawn_bundle(TransformBundle::default())
-                .insert(Name::new("SpaceShip"))
-                .with_children(|commands| {
-                    commands.spawn_scene(space_ship);
-                });
-            commands
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    -15., 15., 15.,
-                )))
-                .insert(Name::new("Asteroid"))
-                .with_children(|commands| {
-                    commands.spawn_scene(asteroid);
-                });
+    use std::fs::File;
+    let file = File::open(path).unwrap();
+    use std::io::BufReader;
+    let reader = BufReader::new(file);
 
-            commands
-                .spawn_bundle(PointLightBundle {
-                    point_light: PointLight {
-                        intensity: 500000.0,
-                        range: 100.0,
-                        shadows_enabled: true,
-                        ..default()
-                    },
-                    transform: Transform::from_xyz(54.0, 58.0, 54.0),
-                    ..default()
-                })
-                .insert(Name::new("Light"));
+    let map: Map = serde_json::from_reader(reader).unwrap();
 
-            commands
-                .spawn_bundle(PointLightBundle {
-                    point_light: PointLight {
-                        intensity: 300000.0,
-                        range: 100.0,
-                        shadows_enabled: true,
-                        ..default()
-                    },
-                    transform: Transform::from_xyz(-54.0, 58.0, -54.0),
-                    ..default()
-                })
-                .insert(Name::new("Light"));
-        });
+    for node in map.nodes.iter() {
+    }
 }
 
 fn spawn_camera(mut commands: Commands) {
