@@ -11,7 +11,7 @@ use bevy_mod_picking::*;
 use bevy_punchthrough::client::{PunchthroughClientPlugin, PunchthroughEvent, RequestSwap};
 use bevy_punchthrough::bevy_renet::{renet::RenetError};
 use bevy_punchthrough::renet_plugin::PTRenetClientPlugin;
-use bevy_template::map::spawn_test_map;
+use macrophage::map::spawn_test_map;
 use derive_more::Display;
 use leafwing_input_manager::{
     plugin::InputManagerPlugin,
