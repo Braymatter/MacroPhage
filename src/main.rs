@@ -5,7 +5,7 @@ use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use derive_more::Display;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState, Actionlike};
-use macrophage::{game::controller::PlayerAction, map::spawn_test_map, ui::UIStatePlugin};
+use macrophage::{game::controller::PlayerAction, map::spawn_test_map, ui::UIStatePlugin, util::MacroUtils};
 
 
 pub const HEIGHT: f32 = 900.0;
@@ -43,7 +43,7 @@ fn main() {
         //Input management and remapping (TODO move to plugin)
         .add_plugin(InputManagerPlugin::<PlayerAction>::default())
         .add_plugin(NoCameraPlayerPlugin)
-
+        .add_plugin(MacroUtils{})
         //Test scene spawning
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_test_map)

@@ -308,7 +308,7 @@ pub fn spawn_test_map(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let path = "assets/test_map.json";
+    let path = "assets/maps/test_map.json";
 
     use std::fs::File;
     let file = File::open(path).unwrap();
