@@ -9,7 +9,8 @@ use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use bevy_punchthrough::client::{PunchthroughClientPlugin, PunchthroughEvent, RequestSwap};
-use bevy_punchthrough::bevy_renet::{renet::RenetError, RenetClientPlugin};
+use bevy_punchthrough::bevy_renet::{renet::RenetError};
+use bevy_punchthrough::renet_plugin::PTRenetClientPlugin;
 use bevy_template::map::spawn_test_map;
 use derive_more::Display;
 use leafwing_input_manager::{
@@ -85,7 +86,7 @@ fn main() {
             ..Default::default()
         })
         .add_plugin(WorldInspectorPlugin::new())
-        .add_plugin(RenetClientPlugin)
+        .add_plugin(PTRenetClientPlugin)
         .add_system(toggle_inspector)
         //Mod picking
         .add_plugins(DefaultPickingPlugins)
