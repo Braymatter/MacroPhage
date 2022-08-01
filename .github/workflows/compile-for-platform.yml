@@ -30,8 +30,8 @@ jobs:
         with:
           name: ${{github.event.repository.name}}-${{matrix.runs-on}}_${{matrix.compile-profile}}
           path: | 
-                  target/debug/bevy_template
-                  target/debug/bevy_template.exe
+                  target/debug/macrophage
+                  target/debug/macrophage.exe
         if: ${{matrix.compile-profile == 'dev'}}
   compile-for-apple:
     strategy:
@@ -55,12 +55,12 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: ${{github.event.repository.name}}-${{matrix.target}}_${{matrix.compile-profile}}
-          path: target/release/bevy_template
+          path: target/release/macrophage
         if: ${{matrix.compile-profile == 'release'}}
       - uses: actions/upload-artifact@v3
         with:
           name: ${{github.event.repository.name}}-${{matrix.target}}_${{matrix.compile-profile}}
-          path: target/debug/bevy_template
+          path: target/debug/macrophage
         if: ${{matrix.compile-profile == 'dev'}}
   upload-assets:
     runs-on: ubuntu-latest
