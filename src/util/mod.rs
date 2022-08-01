@@ -17,7 +17,7 @@ impl Plugin for MacroUtils {
                     .expect("Weird thing when iterating over map directory entries")
                     .file_name()
                     .into_string()
-                    .expect("Could not convert OS Strign to string"),
+                    .expect("Could not convert OS String to string"),
             );
         }
 
