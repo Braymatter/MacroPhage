@@ -54,7 +54,7 @@ fn main() {
 fn spawn_camera(mut commands: Commands) {
     commands
         .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(4.0, 5.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(0.0, 15.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..default()
         })
         .insert(FlyCam)

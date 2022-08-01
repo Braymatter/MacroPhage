@@ -1,5 +1,5 @@
 use bevy::{prelude::*, utils::HashMap};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub enum Message {
@@ -64,7 +64,20 @@ pub enum PhageType {
     Any,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Copy, Clone, Deref, DerefMut, PartialOrd, Ord, Debug)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    Hash,
+    Copy,
+    Clone,
+    Deref,
+    DerefMut,
+    PartialOrd,
+    Ord,
+    Debug,
+)]
 pub struct NodeId(u32);
 
 #[derive(Serialize, Deserialize)]
@@ -131,7 +144,6 @@ pub struct Replicator {
 #[derive(Serialize, Deserialize)]
 pub struct Nexus {
     force: Force,
-    vectors: Vec<NodeId>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -146,17 +158,17 @@ pub struct Occupant(Force, PhageType);
 pub struct Vector(pub NodeId, pub NodeId);
 
 impl Vector {
-	pub fn new(id_1: NodeId, id_2: NodeId) -> Vector {
-		if id_1 < id_2 {
-			Vector(id_1, id_2)
-		} else {
-			Vector(id_2, id_1)
-		}
-	}
+    pub fn new(id_1: NodeId, id_2: NodeId) -> Vector {
+        if id_1 < id_2 {
+            Vector(id_1, id_2)
+        } else {
+            Vector(id_2, id_1)
+        }
+    }
 
-	pub fn is_well_formed(&self) -> bool {
-		self.1 > self.0
-	}
+    pub fn is_well_formed(&self) -> bool {
+        self.1 > self.0
+    }
 }
 
 /// Defines a Force
@@ -172,71 +184,80 @@ pub struct GameMap {
     pub vectors: Vec<Vector>,
     pub num_players: u32,
     pub name: String,
-	pub next_free_id: NodeId
+    pub next_free_id: NodeId,
 }
 
 #[derive(Debug)]
 pub enum PlayerActionError {
-	VectorExists,
-	VectorDoesNotExist{vector: Vector},
-	BadVectorFormat,
-	NodeIdDoesNotExist (NodeId)
+    VectorExists,
+    VectorDoesNotExist { vector: Vector },
+    BadVectorFormat,
+    NodeIdDoesNotExist(NodeId),
 }
 
 impl GameMap {
-	pub fn create_node(&mut self, position: Vec3) -> NodeId {
-		self.nodes.insert(self.next_free_id, Node {
-			id: self.next_free_id,
-			position,
-			tenant: NodeTenant::Cell { cell: Cell{occupant: None} }
-		});
+    pub fn create_node(&mut self, position: Vec3) -> NodeId {
+        self.nodes.insert(
+            self.next_free_id,
+            Node {
+                id: self.next_free_id,
+                position,
+                tenant: NodeTenant::Cell {
+                    cell: Cell { occupant: None },
+                },
+            },
+        );
 
-		let to_return = self.next_free_id;
-		self.next_free_id = NodeId(self.next_free_id.0 + 1);
-		to_return
-	}
+        let to_return = self.next_free_id;
+        self.next_free_id = NodeId(self.next_free_id.0 + 1);
+        to_return
+    }
 
+    pub fn add_vector(&mut self, vector: Vector) -> Result<(), PlayerActionError> {
+        if self.vector_exists(vector) {
+            return Err(PlayerActionError::VectorExists);
+        }
 
+        if !self.nodes.contains_key(&vector.0) {
+            return Err(PlayerActionError::NodeIdDoesNotExist(vector.0));
+        }
 
-	pub fn add_vector(&mut self, vector: Vector) -> Result<(), PlayerActionError>  {
-		if self.vector_exists(vector) {
-			return Err(PlayerActionError::VectorExists);
-		}
+        if !self.nodes.contains_key(&vector.1) {
+            return Err(PlayerActionError::NodeIdDoesNotExist(vector.1));
+        }
 
-		if !self.nodes.contains_key(&vector.0) {
-			return Err(PlayerActionError::NodeIdDoesNotExist(vector.0));
-		}
+        //Swap in place so the lowest node id is first
+        if vector.0 > vector.1 {
+            self.vectors.push(Vector(vector.1, vector.0));
+        }else{
+            self.vectors.push(vector);
+        }
 
-		if !self.nodes.contains_key(&vector.1) {
-			return Err(PlayerActionError::NodeIdDoesNotExist(vector.1));
-		}
+        Ok(())
+    }
 
-		self.vectors.push(vector);
-		Ok(())
-	}
-
-	pub fn vector_exists(&self, vector: Vector) -> bool {
-		if vector.0 > vector.1 {
-			self.vectors.contains(&Vector(vector.1, vector.0))
-		} else {
-			self.vectors.contains(&vector)
-		}
-	}
+    pub fn vector_exists(&self, vector: Vector) -> bool {
+        if vector.0 > vector.1 {
+            self.vectors.contains(&Vector(vector.1, vector.0))
+        } else {
+            self.vectors.contains(&vector)
+        }
+    }
 
     pub fn remove_vector(&mut self, to_remove: Vector) -> Result<(), PlayerActionError> {
         if self.vector_exists(to_remove) {
-			// https://stackoverflow.com/questions/26243025/remove-an-element-from-a-vector
-			
-			match self.vectors.iter().position(|item| {to_remove == *item}) {
-				Some(index) => {
-					self.vectors.remove(index); // No indexes on this!
-					return Ok(());
-				},
-				None => return Err(PlayerActionError::VectorDoesNotExist { vector: to_remove })
-			}
-		}
+            // https://stackoverflow.com/questions/26243025/remove-an-element-from-a-vector
 
-		Err(PlayerActionError::VectorDoesNotExist{vector: to_remove})
+            match self.vectors.iter().position(|item| to_remove == *item) {
+                Some(index) => {
+                    self.vectors.remove(index); // No indexes on this!
+                    return Ok(());
+                }
+                None => return Err(PlayerActionError::VectorDoesNotExist { vector: to_remove }),
+            }
+        }
+
+        Err(PlayerActionError::VectorDoesNotExist { vector: to_remove })
     }
 
     pub fn get_all_neighbors(&self, id: NodeId) -> Vec<NodeId> {
@@ -250,55 +271,6 @@ impl GameMap {
             }
         }
         to_return
-    }
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-	
-    #[test]
-    pub fn create_test_map() {
-        use std::fs::File;
-        use std::io::prelude::*;
-
-        let nodes = HashMap::new();
-        let vectors = vec![];
-        let num_players = 5;
-
-        let name: String = "Hello Map".to_string();
-        let mut map = GameMap {
-            nodes,
-			next_free_id: NodeId(0),
-            vectors,
-            name,
-            num_players,
-        };
-
-		let node_1 = map.create_node(Vec3::ZERO);
-		let node_2 = map.create_node(Vec3::new(1., 2., 3.));
-		let node_3 = map.create_node(Vec3::new(-2., -3., 4.));
-		let node_4 = map.create_node(Vec3::new(-20., -30., 40.));
-		map.add_vector(Vector::new(node_4, node_1)).unwrap();
-		
-		map.add_vector(Vector::new(node_1, node_2)).unwrap();
-		map.remove_vector(Vector::new(node_1, node_2)).unwrap();
-		map.add_vector(Vector::new(node_3, node_1)).unwrap();
-		map.remove_vector(Vector::new(node_1, node_3)).unwrap();
-
-		map.add_vector(Vector::new(node_3, node_2)).unwrap();
-		map.add_vector(Vector::new(node_3, node_1)).unwrap();
-		map.add_vector(Vector::new(node_1, node_2)).unwrap();
-		map.remove_vector(Vector::new(node_3, node_2)).unwrap();
-
-		assert!(map.vectors.len()==3);
-
-        let map_json = serde_json::to_string(&map).unwrap();
-        let mut input = File::create("assets/test_map.json").unwrap();
-        // https://doc.rust-lang.org/std/fs/struct.File.html
-        input.write_all(map_json.as_bytes()).unwrap();
-
-        println!("File Created Luv u -- ur pc");
     }
 }
 
@@ -323,13 +295,24 @@ pub fn spawn_test_map(
         .id();
     let mut node_ents = Vec::default();
     for node in map.nodes.values() {
+        let shape = match &node.tenant {
+            NodeTenant::Cell { cell: _ } => Mesh::from(shape::Icosphere {
+                radius: 1.0,
+                subdivisions: 5,
+            }),
+            NodeTenant::Replicator { replicator: _ } => Mesh::from(shape::Cube { size: 1.0 }),
+            NodeTenant::Nexus { nexus: _ } => Mesh::from(shape::Torus {
+                radius: 0.5,
+                ring_radius: 0.25,
+                subdivisions_segments: 20,
+                subdivisions_sides: 16,
+            }),
+        };
+
         node_ents.push(
             commands
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 1.0,
-                        subdivisions: 5,
-                    })),
+                    mesh: meshes.add(shape),
                     material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
                     transform: Transform::from_translation(node.position),
                     ..default()
@@ -338,6 +321,7 @@ pub fn spawn_test_map(
                 .id(),
         );
     }
+
     let mut vector_ents = Vec::default();
     for vector in map.vectors.iter() {
         let node_0 = map.nodes.get(&vector.0).unwrap();
@@ -350,9 +334,7 @@ pub fn spawn_test_map(
         vector_ents.push(
             commands
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube {
-                        size: 0.5,
-                    })),
+                    mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
                     material: materials.add(Color::rgb(0.8, 0.1, 0.1).into()),
                     transform,
                     ..default()
@@ -363,6 +345,73 @@ pub fn spawn_test_map(
     }
     commands.entity(map_ent).push_children(&node_ents);
     commands.entity(map_ent).push_children(&vector_ents);
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    pub fn create_test_map() {
+        use std::fs::File;
+        use std::io::prelude::*;
+
+        let nodes = HashMap::new();
+        let vectors = vec![];
+        let num_players = 5;
+
+        let name: String = "Hello Map".to_string();
+        let mut map = GameMap {
+            nodes,
+            next_free_id: NodeId(0),
+            vectors,
+            name,
+            num_players,
+        };
+
+        let node_1 = map.create_node(Vec3::ZERO);
+        let node_2 = map.create_node(Vec3::new(1., 0., 3.));
+        let node_3 = map.create_node(Vec3::new(-2., 0., 4.));
+        let node_4 = map.create_node(Vec3::new(-20., 0., 12.));
+        let node_5 = map.create_node(Vec3::new(5.0, 0.0, 5.0));
+        let node_6 = map.create_node(Vec3::new(-5.0, 0.0, 5.0));
+
+        let replicator_node = map.nodes.get_mut(&node_5).expect("fuck");
+        
+        replicator_node.tenant = NodeTenant::Replicator {
+            replicator: Replicator {
+                output: PhageType::Electro,
+                speed: 3,
+                force: Force(1),
+            },
+        };
+
+        let nexus_node = map.nodes.get_mut(&node_6).expect("fuck 2");
+        nexus_node.tenant = NodeTenant::Nexus { nexus: Nexus{force: Force(1)} };
+
+        map.add_vector(Vector::new(node_4, node_1)).unwrap();
+
+        map.add_vector(Vector::new(node_1, node_2)).unwrap();
+        map.remove_vector(Vector::new(node_1, node_2)).unwrap();
+        map.add_vector(Vector::new(node_3, node_1)).unwrap();
+        map.remove_vector(Vector::new(node_1, node_3)).unwrap();
+
+        map.add_vector(Vector::new(node_3, node_2)).unwrap();
+        map.add_vector(Vector::new(node_3, node_1)).unwrap();
+        map.add_vector(Vector::new(node_1, node_2)).unwrap();
+        map.remove_vector(Vector::new(node_3, node_2)).unwrap();
+        map.add_vector(Vector::new(node_5, node_6)).unwrap();
+        map.add_vector(Vector::new(node_5, node_1)).unwrap();
+        assert!(map.vectors.len() == 5);
+
+        let map_json = serde_json::to_string(&map).unwrap();
+        let mut input = File::create("assets/maps/test_map.json").unwrap();
+        // https://doc.rust-lang.org/std/fs/struct.File.html
+        input.write_all(map_json.as_bytes()).unwrap();
+
+        println!("File Created Luv u -- ur pc");
+    }
 }
 
 // Sphere = Cell
