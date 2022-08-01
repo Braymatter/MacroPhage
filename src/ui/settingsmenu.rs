@@ -9,7 +9,9 @@ use bevy_egui::{
 };
 use leafwing_input_manager::{prelude::*, user_input::InputButton};
 
-use crate::PlayerAction;
+use crate::{game::controller::PlayerAction, ui::UIState};
+
+use super::UIStateRes;
 
 const UI_MARGIN: f32 = 10.0;
 
@@ -35,33 +37,13 @@ struct BindingConflict {
     input_button: InputButton,
 }
 
-//This resource might be a bit gross
-#[derive(Default)]
-pub struct InputSettings {
-    pub show_settings: bool,
-}
-
-pub fn toggle_settings(
-    actions: Query<&ActionState<PlayerAction>>,
-    mut input_settings: ResMut<InputSettings>,
-) {
-    let actions = actions.single();
-
-    if actions.just_pressed(PlayerAction::OpenKeyBinds) {
-        input_settings.show_settings = !input_settings.show_settings;
-    }
-}
-
 pub fn controls_window(
     mut commands: Commands,
     mut egui: ResMut<EguiContext>,
     windows: Res<Windows>,
-    settings: Res<InputSettings>,
     player_controls: Query<&InputMap<PlayerAction>>,
+    mut ui_state: ResMut<UIStateRes>
 ) {
-    if !settings.show_settings {
-        return;
-    }
 
     let main_window = windows.get_primary().unwrap();
     let window_width_margin = egui.ctx_mut().style().spacing.window_margin.left * 2.0;
@@ -105,6 +87,12 @@ pub fn controls_window(
                         ui.end_row();
                     }
                 });
+            let return_to_menu = ui.button("Save And Return").clicked();
+            if return_to_menu {
+                warn!("Should Save Settings Here");
+                ui_state.current_state = UIState::MainMenu;
+            }
+            
             ui.expand_to_include_rect(ui.available_rect_before_wrap());
         });
 }

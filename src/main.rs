@@ -1,19 +1,12 @@
 use bevy::{prelude::*, window::PresentMode};
-use bevy_egui::{EguiPlugin};
+use bevy_egui::EguiPlugin;
 use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use derive_more::Display;
-use leafwing_input_manager::{
-    plugin::InputManagerPlugin,
-    prelude::{ActionState, },
-    Actionlike,
-};
+use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState, Actionlike};
+use macrophage::{game::controller::PlayerAction, map::spawn_test_map, ui::UIStatePlugin};
 
-use macrophage::{map::spawn_test_map, game::controller::PlayerAction};
-
-mod input_management;
-use input_management::{binding_window_system, controls_window, toggle_settings, InputSettings};
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
@@ -34,6 +27,7 @@ fn main() {
             resizable: false,
             ..Default::default()
         })
+        .add_plugin(UIStatePlugin)
         .add_plugins(DefaultPlugins)
         //Egui (must be before inspector)
         .add_plugin(EguiPlugin)
@@ -49,17 +43,13 @@ fn main() {
         //Input management and remapping (TODO move to plugin)
         .add_plugin(InputManagerPlugin::<PlayerAction>::default())
         .add_plugin(NoCameraPlayerPlugin)
-        .insert_resource(InputSettings::default())
-        .add_system(controls_window)
-        .add_system(binding_window_system)
-        .add_system(toggle_settings)
+
         //Test scene spawning
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_test_map)
         .add_startup_system(macrophage::game::spawn_player);
     app.run();
 }
-
 
 fn spawn_camera(mut commands: Commands) {
     commands
@@ -81,4 +71,3 @@ fn toggle_inspector(
         window_params.enabled = !window_params.enabled
     }
 }
-
