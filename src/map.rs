@@ -120,6 +120,7 @@ pub enum NodeTenant {
     Cell { cell: Cell },
     Replicator { replicator: Replicator },
     Nexus { nexus: Nexus },
+    Generator { generator: Generator}
 }
 pub enum CellType {
     Transit,
@@ -144,6 +145,12 @@ pub struct Replicator {
 #[derive(Serialize, Deserialize)]
 pub struct Nexus {
     force: Force,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Generator{
+    amt: u32,
+    speed: u32
 }
 
 #[derive(Serialize, Deserialize)]
@@ -175,8 +182,13 @@ impl Vector {
 #[derive(Serialize, Deserialize)]
 pub struct Force(u32);
 
-//Map should be a resource not component?
-/// Data Only representation of a Game Map
+pub enum GameMove{
+    MovePhage{vector: Vector},
+    Mutate{mutation: Mutation},
+    GiveQubits{source: Force, dest: Force, qty: u32},
+}
+
+/// Data Only representation of a Game Map, Game acts as a pure state-machine
 #[derive(Component, Serialize, Deserialize)]
 pub struct GameMap {
     pub nodes: HashMap<NodeId, Node>,
@@ -307,6 +319,7 @@ pub fn spawn_test_map(
                 subdivisions_segments: 20,
                 subdivisions_sides: 16,
             }),
+            NodeTenant::Generator { generator: _ } => Mesh::from(shape::Icosphere{radius: 2.0, subdivisions: 1})
         };
 
         node_ents.push(
@@ -376,6 +389,7 @@ mod tests {
         let node_4 = map.create_node(Vec3::new(-20., 0., 12.));
         let node_5 = map.create_node(Vec3::new(5.0, 0.0, 5.0));
         let node_6 = map.create_node(Vec3::new(-5.0, 0.0, 5.0));
+        let node_7 = map.create_node(Vec3::new(-5.0, 0.0, 0.0));
 
         let replicator_node = map.nodes.get_mut(&node_5).expect("fuck");
         
@@ -390,6 +404,10 @@ mod tests {
         let nexus_node = map.nodes.get_mut(&node_6).expect("fuck 2");
         nexus_node.tenant = NodeTenant::Nexus { nexus: Nexus{force: Force(1)} };
 
+        let generator_node = map.nodes.get_mut(&node_7).expect("fuck 3");
+        generator_node.tenant = NodeTenant::Generator { generator: Generator{amt: 50, speed: 1} };
+
+
         map.add_vector(Vector::new(node_4, node_1)).unwrap();
 
         map.add_vector(Vector::new(node_1, node_2)).unwrap();
@@ -403,7 +421,8 @@ mod tests {
         map.remove_vector(Vector::new(node_3, node_2)).unwrap();
         map.add_vector(Vector::new(node_5, node_6)).unwrap();
         map.add_vector(Vector::new(node_5, node_1)).unwrap();
-        assert!(map.vectors.len() == 5);
+        map.add_vector(Vector::new(node_7, node_5)).unwrap();
+        assert!(map.vectors.len() == 6);
 
         let map_json = serde_json::to_string(&map).unwrap();
         let mut input = File::create("assets/maps/test_map.json").unwrap();
