@@ -304,7 +304,7 @@ mod tests {
 
 pub fn spawn_test_map(
     mut commands: Commands,
-    assets: Res<AssetServer>,
+    _assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
