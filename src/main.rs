@@ -6,6 +6,7 @@ use bevy_mod_picking::*;
 use derive_more::Display;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState, Actionlike};
 use macrophage::{
+    audio::GameAudioPlugin,
     game::controller::PlayerAction,
     map::{spawn_map, LevelManagerRes},
     ui::UIStatePlugin,
@@ -54,7 +55,9 @@ fn main() {
         .add_plugin(MacroCamPlugin {})
         //Test scene spawning
         .add_system(spawn_map)
-        .add_startup_system(macrophage::game::spawn_player);
+        .add_startup_system(macrophage::game::spawn_player)
+        //Audio
+        .add_plugin(GameAudioPlugin);
     app.run();
 }
 
