@@ -1,5 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::BufReader;
 
 #[derive(Serialize, Deserialize)]
 pub enum Message {
@@ -201,7 +203,8 @@ pub enum GameMove {
 pub struct GameMap {
     pub nodes: HashMap<NodeId, Node>,
     //connections: HashMap<NodeId, Vec<VectorId>>,
-    pub vectors: Vec<Vector>, pub num_players: u32,
+    pub vectors: Vec<Vector>,
+    pub num_players: u32,
     pub name: String,
     pub next_free_id: NodeId,
 }
@@ -295,6 +298,36 @@ impl GameMap {
         }
         to_return
     }
+
+    pub fn spawn_node(&self, node: &Node, commands: &mut Commands,  meshes: &mut ResMut<Assets<Mesh>>, materials: &mut ResMut<Assets<StandardMaterial>>) -> Entity {
+        let shape = match &node.tenant {
+            NodeTenant::Cell { cell: _ } => Mesh::from(shape::Icosphere {
+                radius: 1.0,
+                subdivisions: 5,
+            }),
+            NodeTenant::Replicator { replicator: _ } => Mesh::from(shape::Cube { size: 1.0 }),
+            NodeTenant::Nexus { nexus: _ } => Mesh::from(shape::Torus {
+                radius: 0.5,
+                ring_radius: 0.25,
+                subdivisions_segments: 20,
+                subdivisions_sides: 16,
+            }),
+            NodeTenant::Generator { generator: _ } => Mesh::from(shape::Icosphere {
+                radius: 2.0,
+                subdivisions: 1,
+            }),
+        };
+
+        commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(shape),
+                material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                transform: Transform::from_translation(node.position),
+                ..default()
+            })
+            .insert(Name::new("Node"))
+            .id()
+    }
 }
 
 pub fn spawn_map(
@@ -326,9 +359,6 @@ pub fn spawn_map(
         level_manager.current_level.as_ref().unwrap()
     );
 
-    use std::fs::File;
-    use std::io::BufReader;
-
     let file = File::open(path).unwrap();
 
     let reader = BufReader::new(file);
@@ -341,35 +371,7 @@ pub fn spawn_map(
         .id();
     let mut node_ents = Vec::default();
     for node in map.nodes.values() {
-        let shape = match &node.tenant {
-            NodeTenant::Cell { cell: _ } => Mesh::from(shape::Icosphere {
-                radius: 1.0,
-                subdivisions: 5,
-            }),
-            NodeTenant::Replicator { replicator: _ } => Mesh::from(shape::Cube { size: 1.0 }),
-            NodeTenant::Nexus { nexus: _ } => Mesh::from(shape::Torus {
-                radius: 0.5,
-                ring_radius: 0.25,
-                subdivisions_segments: 20,
-                subdivisions_sides: 16,
-            }),
-            NodeTenant::Generator { generator: _ } => Mesh::from(shape::Icosphere {
-                radius: 2.0,
-                subdivisions: 1,
-            }),
-        };
-
-        node_ents.push(
-            commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(shape),
-                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                    transform: Transform::from_translation(node.position),
-                    ..default()
-                })
-                .insert(Name::new("Node"))
-                .id(),
-        );
+        node_ents.push(map.spawn_node(node, &mut commands, &mut meshes, &mut materials));
     }
 
     let mut vector_ents = Vec::default();
@@ -395,7 +397,6 @@ pub fn spawn_map(
     }
     commands.entity(map_ent).push_children(&node_ents);
     commands.entity(map_ent).push_children(&vector_ents);
-
     commands.entity(map_ent).insert(map);
 }
 
