@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 
+use crate::util::ColorPalette;
+
 #[derive(Serialize, Deserialize)]
 pub enum Message {
     Infrastructure(InfrastructureMessage),
@@ -114,6 +116,7 @@ pub struct Recombinator {
 pub struct Node {
     pub id: NodeId,
     pub position: Vec3,
+    pub force: Force,
     pub tenant: NodeTenant,
 }
 
@@ -141,13 +144,10 @@ pub struct Replicator {
 
     ///How many intervals/transmission phases this replicator takes to produce a phage
     speed: u32,
-    force: Force,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Nexus {
-    force: Force,
-}
+pub struct Nexus {}
 
 #[derive(Serialize, Deserialize)]
 pub struct Generator {
@@ -183,6 +183,20 @@ impl Vector {
 /// Defines a Force
 #[derive(Serialize, Deserialize)]
 pub struct Force(u32);
+
+impl Force {
+    pub fn color(&self) -> Color {
+        match self.0 {
+            0 => ColorPalette::ForceBlue.into(),
+            1 => ColorPalette::ForceGreen.into(),
+            2 => ColorPalette::ForceOrange.into(),
+            3 => ColorPalette::ForceRed.into(),
+            4 => ColorPalette::ForceYellow.into(),
+            5 => ColorPalette::ForceBlack.into(),
+            _ => ColorPalette::ForceWhite.into(),
+        }
+    }
+}
 
 pub enum GameMove {
     MovePhage {
@@ -222,12 +236,13 @@ pub enum PlayerActionError {
 }
 
 impl GameMap {
-    pub fn create_node(&mut self, position: Vec3) -> NodeId {
+    pub fn create_node(&mut self, force: Force, position: Vec3) -> NodeId {
         self.nodes.insert(
             self.next_free_id,
             Node {
                 id: self.next_free_id,
                 position,
+                force,
                 tenant: NodeTenant::Cell {
                     cell: Cell { occupant: None },
                 },
@@ -327,7 +342,7 @@ impl GameMap {
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(shape),
-                material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                material: materials.add(node.force.color().into()),
                 transform: Transform::from_translation(node.position),
                 ..default()
             })
@@ -428,13 +443,13 @@ mod tests {
             num_players,
         };
 
-        let node_1 = map.create_node(Vec3::ZERO);
-        let node_2 = map.create_node(Vec3::new(1., 0., 3.));
-        let node_3 = map.create_node(Vec3::new(-2., 0., 4.));
-        let node_4 = map.create_node(Vec3::new(-20., 0., 12.));
-        let node_5 = map.create_node(Vec3::new(5.0, 0.0, 5.0));
-        let node_6 = map.create_node(Vec3::new(-5.0, 0.0, 5.0));
-        let node_7 = map.create_node(Vec3::new(-5.0, 0.0, 0.0));
+        let node_1 = map.create_node(Force(0), Vec3::ZERO);
+        let node_2 = map.create_node(Force(1), Vec3::new(1., 0., 3.));
+        let node_3 = map.create_node(Force(2), Vec3::new(-2., 0., 4.));
+        let node_4 = map.create_node(Force(3), Vec3::new(-20., 0., 12.));
+        let node_5 = map.create_node(Force(4), Vec3::new(5.0, 0.0, 5.0));
+        let node_6 = map.create_node(Force(5), Vec3::new(-5.0, 0.0, 5.0));
+        let node_7 = map.create_node(Force(9), Vec3::new(-5.0, 0.0, 0.0));
 
         let replicator_node = map.nodes.get_mut(&node_5).expect("fuck");
 
@@ -442,14 +457,11 @@ mod tests {
             replicator: Replicator {
                 output: PhageType::Electro,
                 speed: 3,
-                force: Force(1),
             },
         };
 
         let nexus_node = map.nodes.get_mut(&node_6).expect("fuck 2");
-        nexus_node.tenant = NodeTenant::Nexus {
-            nexus: Nexus { force: Force(1) },
-        };
+        nexus_node.tenant = NodeTenant::Nexus { nexus: Nexus {} };
 
         let generator_node = map.nodes.get_mut(&node_7).expect("fuck 3");
         generator_node.tenant = NodeTenant::Generator {
