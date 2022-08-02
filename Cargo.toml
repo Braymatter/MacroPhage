@@ -14,8 +14,20 @@ opt-level = 0
 opt-level = 3
 
 [dependencies]
-bevy = {version = "0.7"} ## RUN WITH NIGHTLY FEATURE FOR FASTER LINKING
+bevy = {version = "0.7", features = [
+    "bevy_gilrs",
+    "bevy_winit",
+    "render",
+    "png",
+    "hdr",
+    "vorbis",
+    "x11",
+    # "dynamic",
+    "filesystem_watcher",
+    "trace"
+    ] } ## RUN WITH NIGHTLY FEATURE FOR FASTER LINKING
 bevy-inspector-egui = "0.11"
+bevy_kira_audio = "0.10"
 bevy_egui = "0.14"
 bevy_mod_picking = "0.7"
 leafwing-input-manager = "0.4.1"
