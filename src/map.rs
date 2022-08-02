@@ -201,8 +201,7 @@ pub enum GameMove {
 pub struct GameMap {
     pub nodes: HashMap<NodeId, Node>,
     //connections: HashMap<NodeId, Vec<VectorId>>,
-    pub vectors: Vec<Vector>,
-    pub num_players: u32,
+    pub vectors: Vec<Vector>, pub num_players: u32,
     pub name: String,
     pub next_free_id: NodeId,
 }
