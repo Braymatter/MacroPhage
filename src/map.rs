@@ -120,7 +120,7 @@ pub enum NodeTenant {
     Cell { cell: Cell },
     Replicator { replicator: Replicator },
     Nexus { nexus: Nexus },
-    Generator { generator: Generator}
+    Generator { generator: Generator },
 }
 pub enum CellType {
     Transit,
@@ -148,9 +148,9 @@ pub struct Nexus {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Generator{
+pub struct Generator {
     amt: u32,
-    speed: u32
+    speed: u32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -182,12 +182,19 @@ impl Vector {
 #[derive(Serialize, Deserialize)]
 pub struct Force(u32);
 
-pub enum GameMove{
-    MovePhage{vector: Vector},
-    Mutate{mutation: Mutation},
-    GiveQubits{source: Force, dest: Force, qty: u32},
+pub enum GameMove {
+    MovePhage {
+        vector: Vector,
+    },
+    Mutate {
+        mutation: Mutation,
+    },
+    GiveQubits {
+        source: Force,
+        dest: Force,
+        qty: u32,
+    },
 }
-
 
 /// Data Only representation of a Game Map, Game acts as a pure state-machine
 #[derive(Component, Serialize, Deserialize)]
@@ -200,12 +207,8 @@ pub struct GameMap {
     pub next_free_id: NodeId,
 }
 
-pub struct LevelManagerRes{
+pub struct LevelManagerRes {
     pub current_level: Option<String>,
-}
-
-impl LevelManagerRes{
-
 }
 
 #[derive(Debug)]
@@ -250,7 +253,7 @@ impl GameMap {
         //Swap in place so the lowest node id is first
         if vector.0 > vector.1 {
             self.vectors.push(Vector(vector.1, vector.0));
-        }else{
+        } else {
             self.vectors.push(vector);
         }
 
@@ -303,25 +306,30 @@ pub fn spawn_map(
     level_manager: Res<LevelManagerRes>,
     mut maps: Query<(&GameMap, Entity)>,
 ) {
-
     if !level_manager.is_changed() {
         return;
     }
-    
+
     maps.for_each_mut(|thing| {
         commands.entity(thing.1).despawn_recursive();
     });
 
-    if level_manager.current_level == None{
+    if level_manager.current_level == None {
         return;
     }
 
-    let path = format!("assets/maps/{}",level_manager.current_level.as_ref().unwrap());
-    debug!("Loading level {}", level_manager.current_level.as_ref().unwrap());
+    let path = format!(
+        "assets/maps/{}",
+        level_manager.current_level.as_ref().unwrap()
+    );
+    debug!(
+        "Loading level {}",
+        level_manager.current_level.as_ref().unwrap()
+    );
 
     use std::fs::File;
     use std::io::BufReader;
-    
+
     let file = File::open(path).unwrap();
 
     let reader = BufReader::new(file);
@@ -346,7 +354,10 @@ pub fn spawn_map(
                 subdivisions_segments: 20,
                 subdivisions_sides: 16,
             }),
-            NodeTenant::Generator { generator: _ } => Mesh::from(shape::Icosphere{radius: 2.0, subdivisions: 1})
+            NodeTenant::Generator { generator: _ } => Mesh::from(shape::Icosphere {
+                radius: 2.0,
+                subdivisions: 1,
+            }),
         };
 
         node_ents.push(
@@ -420,7 +431,7 @@ mod tests {
         let node_7 = map.create_node(Vec3::new(-5.0, 0.0, 0.0));
 
         let replicator_node = map.nodes.get_mut(&node_5).expect("fuck");
-        
+
         replicator_node.tenant = NodeTenant::Replicator {
             replicator: Replicator {
                 output: PhageType::Electro,
@@ -430,11 +441,14 @@ mod tests {
         };
 
         let nexus_node = map.nodes.get_mut(&node_6).expect("fuck 2");
-        nexus_node.tenant = NodeTenant::Nexus { nexus: Nexus{force: Force(1)} };
+        nexus_node.tenant = NodeTenant::Nexus {
+            nexus: Nexus { force: Force(1) },
+        };
 
         let generator_node = map.nodes.get_mut(&node_7).expect("fuck 3");
-        generator_node.tenant = NodeTenant::Generator { generator: Generator{amt: 50, speed: 1} };
-
+        generator_node.tenant = NodeTenant::Generator {
+            generator: Generator { amt: 50, speed: 1 },
+        };
 
         map.add_vector(Vector::new(node_4, node_1)).unwrap();
 

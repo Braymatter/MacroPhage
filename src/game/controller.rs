@@ -1,7 +1,5 @@
 use derive_more::Display;
-use leafwing_input_manager::{
-    Actionlike,
-};
+use leafwing_input_manager::Actionlike;
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
 pub enum PlayerAction {
@@ -38,5 +36,5 @@ pub enum PlayerAction {
     PanLeft,
     PanRight,
     ZoomIn,
-    ZoomOut
+    ZoomOut,
 }

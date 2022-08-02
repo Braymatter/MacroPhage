@@ -42,9 +42,8 @@ pub fn controls_window(
     mut egui: ResMut<EguiContext>,
     windows: Res<Windows>,
     player_controls: Query<&InputMap<PlayerAction>>,
-    mut ui_state: ResMut<UIStateRes>
+    mut ui_state: ResMut<UIStateRes>,
 ) {
-
     let main_window = windows.get_primary().unwrap();
     let window_width_margin = egui.ctx_mut().style().spacing.window_margin.left * 2.0;
 
@@ -92,7 +91,7 @@ pub fn controls_window(
                 warn!("Should Save Settings Here");
                 ui_state.current_state = UIState::MainMenu;
             }
-            
+
             ui.expand_to_include_rect(ui.available_rect_before_wrap());
         });
 }

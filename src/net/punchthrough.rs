@@ -1,22 +1,21 @@
-use std::net::{SocketAddr, Ipv6Addr, IpAddr, Ipv4Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
 
 use bevy::prelude::*;
-use bevy_punchthrough::client::{PunchthroughEvent, RequestSwap, PunchthroughClientPlugin};
+use bevy_punchthrough::client::{PunchthroughClientPlugin, PunchthroughEvent, RequestSwap};
 use bevy_punchthrough::renet_plugin::renet::RenetError;
 use dns_lookup::lookup_host;
 use leafwing_input_manager::prelude::ActionState;
 
 use crate::game::controller::PlayerAction;
 
-
 pub struct PunchthroughPlugin;
 
-impl Plugin for PunchthroughPlugin{
+impl Plugin for PunchthroughPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(renet_test_controls);
         app.add_system(panic_on_error_system);
-        
+
         build_punchthrough_plugin(app);
     }
 }
@@ -63,9 +62,13 @@ fn build_punchthrough_plugin(app: &mut App) {
                     .expect("Could not convert ip to ipv4 from string")
                     .to_ipv6_compatible();
 
-                info!("Converted DNS Lookup IP {} to ipv6 {}", ip.to_string(), ipv6.to_string());
+                info!(
+                    "Converted DNS Lookup IP {} to ipv6 {}",
+                    ip.to_string(),
+                    ipv6.to_string()
+                );
                 IpAddr::V6(ipv6)
-            }else{
+            } else {
                 ip
             }
         }
