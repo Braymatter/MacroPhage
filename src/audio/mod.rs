@@ -28,7 +28,7 @@ pub enum Sfx {
 pub struct PlayRandomSfx(Sfx);
 
 #[derive(Default)]
-pub struct SfxLibrary {
+struct SfxLibrary {
     map: HashMap<Sfx, Vec<Handle<AudioSource>>>,
 }
 
@@ -85,21 +85,20 @@ fn load_sfx(sfx: Sfx, asset_server: &AssetServer) -> Vec<Handle<AudioSource>> {
     sfx_path.push("sounds");
     sfx_path.push(sfx.to_string());
 
-    let audio_paths = fs::read_dir(sfx_path).unwrap();
-
     let mut to_return = Vec::new();
-    for path in audio_paths {
-        //Yuck but need to remove the assets/
-        let path: String = path
-            .unwrap()
-            .path()
-            .display()
-            .to_string()
-            .chars()
-            .skip(7)
-            .collect();
-        info!("Loading sfx: {}", path);
-        to_return.push(asset_server.load(&path));
+    if let Ok(audio_paths) = fs::read_dir(sfx_path.clone()) {
+        for path in audio_paths {
+            if let Ok(path) = path {
+                //Yuck but need to remove the assets/
+                let path: String = path.path().display().to_string().chars().skip(7).collect();
+                info!("Loading sfx: {}", path);
+                to_return.push(asset_server.load(&path));
+            } else {
+                error!("Failed to load {:?}: {:?}", sfx_path, path);
+            }
+        }
+    } else {
+        error!("Failed to read directories for {:?}", sfx_path);
     }
     to_return
 }
