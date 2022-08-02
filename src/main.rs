@@ -50,9 +50,9 @@ fn main() {
         .add_plugin(MacroCamPlugin {})
         //Test scene spawning
         .add_system(spawn_map)
-        .add_startup_system(macrophage::game::spawn_player);
+        .add_startup_system(macrophage::game::spawn_player)
     //Audio
-    //.add_plugin(GameAudioPlugin);
+        .add_plugin(GameAudioPlugin);
     app.run();
 }
 
