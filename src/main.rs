@@ -51,7 +51,7 @@ fn main() {
         //Test scene spawning
         .add_system(spawn_map)
         .add_startup_system(macrophage::game::spawn_player)
-    //Audio
+        //Audio
         .add_plugin(GameAudioPlugin);
     app.run();
 }
