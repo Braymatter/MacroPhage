@@ -3,8 +3,7 @@ use bevy_egui::EguiPlugin;
 use bevy_flycam::NoCameraPlayerPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
-use derive_more::Display;
-use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState, Actionlike};
+use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState};
 use macrophage::{
     audio::GameAudioPlugin,
     game::controller::PlayerAction,
@@ -15,10 +14,6 @@ use macrophage::{
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
-
-/// Actions initiated by a KeyPress
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
-pub enum PlayerGameAction {}
 
 fn main() {
     let mut app = App::new();
