@@ -6,7 +6,7 @@ use bevy_egui::{
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
-use crate::util::MapManifest;
+use crate::util::{MapManifest, camera::{CameraState, PlayerCamMarker}};
 
 use super::{UIState, UIStateRes};
 
@@ -14,7 +14,7 @@ pub struct LobbyStateRes{
     pub selected_map: String
 }
 
-pub fn lobby(mut egui_context: ResMut<EguiContext>, mut ui_state: ResMut<UIStateRes>, maps_manifest: ResMut<MapManifest>, mut lobby_state: ResMut<LobbyStateRes>) {
+pub fn lobby(mut egui_context: ResMut<EguiContext>, mut ui_state: ResMut<UIStateRes>, maps_manifest: ResMut<MapManifest>, mut lobby_state: ResMut<LobbyStateRes>, mut player_cam: Query<(&mut CameraState, &PlayerCamMarker)>) {
     Window::new("Game Lobby")
         .anchor(Align2::CENTER_CENTER, egui::vec2(0.0, -50.0))
         .show(egui_context.ctx_mut(), |ui| {
@@ -25,8 +25,11 @@ pub fn lobby(mut egui_context: ResMut<EguiContext>, mut ui_state: ResMut<UIState
             });
 
             let play_btn = ui.button("Launch Game");
+            let (mut cam_state, _) = player_cam.single_mut();
 
             if play_btn.clicked() && lobby_state.selected_map != *"".to_string(){ //Such unrust shall not stand!
+                cam_state.should_pan = true;
+                cam_state.should_zoom = true;
                 ui_state.current_state = UIState::Game
             }
 

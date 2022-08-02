@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::EguiPlugin;
-use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
+use bevy_flycam::{NoCameraPlayerPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use derive_more::Display;

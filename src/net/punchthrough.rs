@@ -47,7 +47,6 @@ pub fn renet_test_controls(
     }
 }
 
-
 fn build_punchthrough_plugin(app: &mut App) {
     let local_ip = Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1);
     let local_socket: SocketAddr = SocketAddr::new(IpAddr::from(local_ip), 5001);

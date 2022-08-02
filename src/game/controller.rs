@@ -33,8 +33,10 @@ pub enum PlayerAction {
     HotKey3,
     HotKey4,
 
-    PanForward,
-    PanBackwards,
+    PanUp,
+    PanDown,
     PanLeft,
     PanRight,
+    ZoomIn,
+    ZoomOut
 }
