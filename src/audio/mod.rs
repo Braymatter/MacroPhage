@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use bevy::{prelude::*, utils::HashMap};
 use bevy_kira_audio::{Audio, AudioSource, *};
@@ -43,8 +43,14 @@ fn load_all_sfx(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn load_sfx(sfx: Sfx, asset_server: &AssetServer) -> Vec<Handle<AudioSource>> {
-    let sfx_path = format!("audio/sounds/{}", &sfx.to_string());
-    let audio_paths = fs::read_dir(format!("assets/{}", sfx_path)).unwrap();
+    //Yuck but windows/linux
+    let mut sfx_path = PathBuf::new();
+    sfx_path.push("assets");
+    sfx_path.push("audio");
+    sfx_path.push("sounds");
+    sfx_path.push(sfx.to_string());
+
+    let audio_paths = fs::read_dir(sfx_path).unwrap();
 
     let mut to_return = Vec::new();
     for path in audio_paths {
@@ -64,5 +70,10 @@ fn load_sfx(sfx: Sfx, asset_server: &AssetServer) -> Vec<Handle<AudioSource>> {
 }
 
 fn play_bgm(asset_server: Res<AssetServer>, audio: Res<Audio>) {
-    audio.play_looped(asset_server.load("audio/music/GameplayMusicROUGH.wav"));
+    //Yuck but windows/linux
+    let mut bgm_path = PathBuf::new();
+    bgm_path.push("audio");
+    bgm_path.push("music");
+    bgm_path.push("GameplayMusicROUGH.wav");
+    audio.play_looped(asset_server.load(bgm_path));
 }
