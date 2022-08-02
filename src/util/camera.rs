@@ -63,10 +63,14 @@ pub fn spawn_camera(mut commands: Commands) {
         .insert_bundle(PickingCameraBundle::default());
 }
 
-/// Could probably refactor these to be more generic, these systems assume a top down (y) view. 
-pub fn pan_cam(action_query: Query<&ActionState<PlayerAction>>, mut player_cam_query: Query<(&mut Transform, &CameraState)>, time: Res<Time>){
+/// Could probably refactor these to be more generic, these systems assume a top down (y) view.
+pub fn pan_cam(
+    action_query: Query<&ActionState<PlayerAction>>,
+    mut player_cam_query: Query<(&mut Transform, &CameraState)>,
+    time: Res<Time>,
+) {
     let actions = action_query.single();
-    
+
     for cam in player_cam_query.iter_mut() {
         let (mut transform, cam_state) = cam;
         if !cam_state.should_pan {
@@ -74,38 +78,36 @@ pub fn pan_cam(action_query: Query<&ActionState<PlayerAction>>, mut player_cam_q
         }
 
         if actions.pressed(PlayerAction::PanLeft) {
-            let translation =  transform.left() * cam_state.pan_speed * time.delta_seconds();
+            let translation = transform.left() * cam_state.pan_speed * time.delta_seconds();
             transform.translation += translation;
-
         }
 
         if actions.pressed(PlayerAction::PanRight) {
-            let translation =  transform.right() * cam_state.pan_speed * time.delta_seconds();
+            let translation = transform.right() * cam_state.pan_speed * time.delta_seconds();
             transform.translation += translation;
-
         }
 
         if actions.pressed(PlayerAction::PanUp) {
-            let translation =  transform.up() * cam_state.pan_speed * time.delta_seconds();
+            let translation = transform.up() * cam_state.pan_speed * time.delta_seconds();
             transform.translation += translation;
-
         }
 
         if actions.pressed(PlayerAction::PanDown) {
-            let translation =  transform.down() * cam_state.pan_speed * time.delta_seconds();
+            let translation = transform.down() * cam_state.pan_speed * time.delta_seconds();
             transform.translation += translation;
-
         }
-
     }
 }
 
 // TODO: Go back and rewrite this to lerp to a target y-level
-pub fn zoom_cam(action_query: Query<&ActionState<PlayerAction>>, mut player_cam_query: Query<(&mut Transform, &CameraState)>, time: Res<Time>){
+pub fn zoom_cam(
+    action_query: Query<&ActionState<PlayerAction>>,
+    mut player_cam_query: Query<(&mut Transform, &CameraState)>,
+    time: Res<Time>,
+) {
     let actions = action_query.single();
 
-    
-    for cam in player_cam_query.iter_mut(){
+    for cam in player_cam_query.iter_mut() {
         let (mut transform, cam_state) = cam;
 
         if !cam_state.should_zoom {
@@ -114,23 +116,23 @@ pub fn zoom_cam(action_query: Query<&ActionState<PlayerAction>>, mut player_cam_
 
         let mut translation = Vec3::ZERO;
 
-        if actions.pressed(PlayerAction::ZoomIn)  && transform.translation.y > cam_state.zoom_target_level {
+        if actions.pressed(PlayerAction::ZoomIn)
+            && transform.translation.y > cam_state.zoom_target_level
+        {
             translation += transform.forward() * (time.delta_seconds() * cam_state.zoom_speed);
         }
 
-        if actions.pressed(PlayerAction::ZoomOut){
+        if actions.pressed(PlayerAction::ZoomOut) {
             translation += transform.back() * (time.delta_seconds() * cam_state.zoom_speed);
         }
 
         transform.translation += translation;
 
-        //Correct back to minimum. 
+        //Correct back to minimum.
         if transform.translation.y < cam_state.zoom_target_level {
             transform.translation.y = cam_state.zoom_target_level
         }
     }
 }
 
-pub fn look_cam(){
-
-}
+pub fn look_cam() {}

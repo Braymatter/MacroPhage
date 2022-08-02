@@ -1,6 +1,6 @@
 use self::controller::PlayerAction;
 use bevy::prelude::*;
-use leafwing_input_manager::{prelude::*,};
+use leafwing_input_manager::prelude::*;
 
 pub mod controller;
 
@@ -25,8 +25,7 @@ pub fn spawn_player(mut commands: Commands) {
                 (KeyCode::Left, PlayerAction::PanLeft),
                 (KeyCode::Right, PlayerAction::PanRight),
                 (KeyCode::Up, PlayerAction::PanUp),
-                (KeyCode::Down, PlayerAction::PanDown)
-                
+                (KeyCode::Down, PlayerAction::PanDown),
             ]),
             ..default()
         })
