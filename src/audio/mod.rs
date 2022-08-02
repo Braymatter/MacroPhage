@@ -2,13 +2,17 @@ use std::{fs, path::PathBuf};
 
 use bevy::{prelude::*, utils::HashMap};
 use bevy_kira_audio::{Audio, AudioSource, *};
+use leafwing_input_manager::prelude::ActionState;
+use rand::seq::SliceRandom;
 use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
+use crate::game::controller::PlayerAction;
+
 pub struct GameAudioPlugin;
 
-#[derive(Component, Default, Clone)]
 struct BgmChannel;
+struct SfxChannel;
 
 #[derive(Debug, Display, EnumIter, Hash, PartialEq, Eq, Clone, Copy)]
 pub enum Sfx {
@@ -20,6 +24,9 @@ pub enum Sfx {
     VectorSlide,
 }
 
+#[derive(Deref, DerefMut)]
+pub struct PlayRandomSfx(Sfx);
+
 #[derive(Default)]
 pub struct SfxLibrary {
     map: HashMap<Sfx, Vec<Handle<AudioSource>>>,
@@ -29,8 +36,36 @@ impl Plugin for GameAudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(AudioPlugin)
             .add_audio_channel::<BgmChannel>()
+            .add_audio_channel::<SfxChannel>()
+            .add_event::<PlayRandomSfx>()
             .add_startup_system(play_bgm)
+            .add_system(play_sfx)
+            .add_system(audio_example_usage)
             .add_startup_system(load_all_sfx);
+    }
+}
+
+fn audio_example_usage(
+    mut sfx_event: EventWriter<PlayRandomSfx>,
+    actions: Query<&ActionState<PlayerAction>>,
+) {
+    let actions = actions.single();
+
+    if actions.just_pressed(PlayerAction::Scream) {
+        sfx_event.send(PlayRandomSfx(Sfx::VectorSlide));
+    }
+}
+
+fn play_sfx(
+    mut sfx_event: EventReader<PlayRandomSfx>,
+    channel: Res<AudioChannel<SfxChannel>>,
+    library: Res<SfxLibrary>,
+) {
+    for sfx in sfx_event.iter() {
+        let sfx_list = library.map.get(sfx).unwrap();
+        if let Some(sfx) = sfx_list.choose(&mut rand::thread_rng()) {
+            channel.play(sfx.clone());
+        }
     }
 }
 
@@ -69,11 +104,11 @@ fn load_sfx(sfx: Sfx, asset_server: &AssetServer) -> Vec<Handle<AudioSource>> {
     to_return
 }
 
-fn play_bgm(asset_server: Res<AssetServer>, audio: Res<Audio>) {
+fn play_bgm(asset_server: Res<AssetServer>, bgm: Res<AudioChannel<BgmChannel>>) {
     //Yuck but windows/linux
     let mut bgm_path = PathBuf::new();
     bgm_path.push("audio");
     bgm_path.push("music");
     bgm_path.push("GameplayMusicROUGH.wav");
-    audio.play_looped(asset_server.load(bgm_path));
+    bgm.play_looped(asset_server.load(bgm_path));
 }

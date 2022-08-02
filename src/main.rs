@@ -16,10 +16,6 @@ use macrophage::{
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
-/// Actions initiated by a KeyPress
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Display)]
-pub enum PlayerGameAction {}
-
 fn main() {
     let mut app = App::new();
     app
