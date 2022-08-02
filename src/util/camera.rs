@@ -94,9 +94,7 @@ pub fn pan_cam(action_query: Query<&ActionState<PlayerAction>>, mut player_cam_q
         if actions.pressed(PlayerAction::PanDown) {
             let translation =  transform.down() * cam_state.pan_speed * time.delta_seconds();
             transform.translation += translation;
-
         }
-
     }
 }
 

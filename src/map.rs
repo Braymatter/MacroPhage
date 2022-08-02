@@ -286,11 +286,12 @@ impl GameMap {
     }
 }
 
-pub fn spawn_test_map(
+pub fn spawn_map(
     mut commands: Commands,
     _assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    
 ) {
     let path = "assets/maps/test_map.json";
 
@@ -359,7 +360,6 @@ pub fn spawn_test_map(
     commands.entity(map_ent).push_children(&node_ents);
     commands.entity(map_ent).push_children(&vector_ents);
 }
-
 
 #[cfg(test)]
 mod tests {
