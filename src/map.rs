@@ -299,7 +299,13 @@ impl GameMap {
         to_return
     }
 
-    pub fn spawn_node(&self, node: &Node, commands: &mut Commands,  meshes: &mut ResMut<Assets<Mesh>>, materials: &mut ResMut<Assets<StandardMaterial>>) -> Entity {
+    pub fn spawn_node(
+        &self,
+        node: &Node,
+        commands: &mut Commands,
+        meshes: &mut ResMut<Assets<Mesh>>,
+        materials: &mut ResMut<Assets<StandardMaterial>>,
+    ) -> Entity {
         let shape = match &node.tenant {
             NodeTenant::Cell { cell: _ } => Mesh::from(shape::Icosphere {
                 radius: 1.0,
