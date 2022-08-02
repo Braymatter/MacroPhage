@@ -5,7 +5,7 @@ use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use derive_more::Display;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState, Actionlike};
-use macrophage::{game::controller::PlayerAction, map::spawn_map, ui::UIStatePlugin, util::{MacroUtils, camera::MacroCamPlugin}};
+use macrophage::{game::controller::PlayerAction, map::{spawn_map, LevelManagerRes}, ui::UIStatePlugin, util::{MacroUtils, camera::MacroCamPlugin}};
 
 
 pub const HEIGHT: f32 = 900.0;
@@ -27,6 +27,7 @@ fn main() {
             resizable: false,
             ..Default::default()
         })
+        .insert_resource(LevelManagerRes{current_level: None})
         .add_plugin(UIStatePlugin)
         .add_plugins(DefaultPlugins)
         //Egui (must be before inspector)
@@ -46,7 +47,7 @@ fn main() {
         .add_plugin(MacroUtils{})
         .add_plugin(MacroCamPlugin{})
         //Test scene spawning
-        .add_startup_system(spawn_map)
+        .add_system(spawn_map)
         .add_startup_system(macrophage::game::spawn_player);
     app.run();
 }

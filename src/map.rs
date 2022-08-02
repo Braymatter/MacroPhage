@@ -188,6 +188,7 @@ pub enum GameMove{
     GiveQubits{source: Force, dest: Force, qty: u32},
 }
 
+
 /// Data Only representation of a Game Map, Game acts as a pure state-machine
 #[derive(Component, Serialize, Deserialize)]
 pub struct GameMap {
@@ -197,6 +198,14 @@ pub struct GameMap {
     pub num_players: u32,
     pub name: String,
     pub next_free_id: NodeId,
+}
+
+pub struct LevelManagerRes{
+    pub current_level: Option<String>,
+}
+
+impl LevelManagerRes{
+
 }
 
 #[derive(Debug)]
@@ -291,13 +300,30 @@ pub fn spawn_map(
     _assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    
+    level_manager: Res<LevelManagerRes>,
+    mut maps: Query<(&GameMap, Entity)>,
 ) {
-    let path = "assets/maps/test_map.json";
+
+    if !level_manager.is_changed() {
+        return;
+    }
+    
+    maps.for_each_mut(|thing| {
+        commands.entity(thing.1).despawn_recursive();
+    });
+
+    if level_manager.current_level == None{
+        return;
+    }
+
+    let path = format!("assets/maps/{}",level_manager.current_level.as_ref().unwrap());
+    debug!("Loading level {}", level_manager.current_level.as_ref().unwrap());
 
     use std::fs::File;
-    let file = File::open(path).unwrap();
     use std::io::BufReader;
+    
+    let file = File::open(path).unwrap();
+
     let reader = BufReader::new(file);
 
     let map: GameMap = serde_json::from_reader(reader).unwrap();
@@ -359,6 +385,8 @@ pub fn spawn_map(
     }
     commands.entity(map_ent).push_children(&node_ents);
     commands.entity(map_ent).push_children(&vector_ents);
+
+    commands.entity(map_ent).insert(map);
 }
 
 #[cfg(test)]

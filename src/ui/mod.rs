@@ -39,7 +39,7 @@ pub struct UIStatePlugin;
 impl Plugin for UIStatePlugin{
     fn build(&self, app: &mut App) {
         app.insert_resource(UIStateRes{current_state: UIState::MainMenu})
-        .insert_resource(LobbyStateRes{selected_map: "".to_string()})
+        .insert_resource(LobbyStateRes{selected_map: None})
         .add_system(self::mainmenu::main_menu.run_if(show_main_menu))
         .add_system(self::settingsmenu::controls_window.run_if(show_settings_menu))
         .add_system(self::gamelobby::lobby.run_if(show_lobby_screen))
