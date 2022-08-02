@@ -1,5 +1,5 @@
 use bevy::prelude::Plugin;
-
+pub mod camera;
 pub struct MapManifest {
     pub map_files: Vec<String>,
 }
