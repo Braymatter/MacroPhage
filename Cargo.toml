@@ -29,6 +29,8 @@ bevy = {version = "0.7", features = [
 bevy-inspector-egui = "0.11"
 bevy_kira_audio = { version = "0.10", features = ["ogg", "mp3", "wav"] }
 bevy_egui = "0.14"
+strum = "0.24"
+strum_macros = "0.24"
 bevy_mod_picking = "0.7"
 leafwing-input-manager = "0.4.1"
 derive_more = "*"
