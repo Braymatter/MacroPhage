@@ -23,8 +23,8 @@ jobs:
         with:
           name: ${{github.event.repository.name}}-${{matrix.runs-on}}_${{matrix.compile-profile}}
           path: | 
-                  target/release/bevy_template
-                  target/release/bevy_template.exe
+                  target/release/macrophage
+                  target/release/macrophage.exe
         if: ${{matrix.compile-profile == 'release'}}
       - uses: actions/upload-artifact@v3
         with:
