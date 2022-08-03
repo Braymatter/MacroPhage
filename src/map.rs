@@ -1,8 +1,8 @@
+use crate::util::ColorPalette;
 use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
-use crate::util::ColorPalette;
 
 #[derive(Serialize, Deserialize, Component)]
 pub enum InfrastructureMessage {
@@ -325,52 +325,55 @@ impl GameMap {
 }
 
 #[derive(Clone)]
-pub struct PlayerMutationEvent{
+pub struct PlayerMutationEvent {
     pub mutation: Mutation,
     pub force: Force,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct MutationFailed{
-    pub mutation: Mutation
+pub struct MutationFailed {
+    pub mutation: Mutation,
 }
 
-pub fn process_map_mutations(mut mutation_events: EventReader<PlayerMutationEvent>, mut map_query: Query<(&mut GameMap, Entity)>, mut mutation_failure_ev: EventWriter<MutationFailed>){
+pub fn process_map_mutations(
+    mut mutation_events: EventReader<PlayerMutationEvent>,
+    mut map_query: Query<(&mut GameMap, Entity)>,
+    mut mutation_failure_ev: EventWriter<MutationFailed>,
+) {
     let (mut map, ent) = map_query.single_mut();
 
-    for mutation_ev in mutation_events.iter(){
+    for mutation_ev in mutation_events.iter() {
         match &mutation_ev.mutation {
             //Recombinators Trigger at the beginning of the next interval
-            Mutation::TriggerRecombinator { target, cost } => {
-
-            },
+            Mutation::TriggerRecombinator { target, cost } => {}
 
             //Vectors are removed at time of mutation
             Mutation::RemoveVector { relation, cost } => {
-                if let Ok(()) = map.remove_vector(*relation){
-
-                }else{
-                    mutation_failure_ev.send(MutationFailed { mutation: mutation_ev.mutation.clone()})
+                if let Ok(()) = map.remove_vector(*relation) {
+                } else {
+                    mutation_failure_ev.send(MutationFailed {
+                        mutation: mutation_ev.mutation.clone(),
+                    })
                 }
-            },
+            }
 
             //Vectors are added at time of mutation
             Mutation::AddVector { relation, cost } => {
-                
-                if let Ok(()) = map.add_vector(*relation){
-                    
-                }else{
-                    mutation_failure_ev.send(MutationFailed { mutation: mutation_ev.mutation.clone() })
+                if let Ok(()) = map.add_vector(*relation) {
+                } else {
+                    mutation_failure_ev.send(MutationFailed {
+                        mutation: mutation_ev.mutation.clone(),
+                    })
                 }
-            },
+            }
 
             //Replicator Output is changed at time of mutation and counter is reset
-            Mutation::ChangeReplicatorType { replicator, new_type, cost } => {
-
-            }
+            Mutation::ChangeReplicatorType {
+                replicator,
+                new_type,
+                cost,
+            } => {}
         }
-
-
     }
 }
 
