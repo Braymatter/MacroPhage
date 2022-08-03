@@ -45,7 +45,7 @@ fn main() {
         .add_plugins(DefaultPickingPlugins)
         //Input management and remapping (TODO move to plugin)
         .add_plugin(InputManagerPlugin::<PlayerAction>::default())
-        .add_plugin(NoCameraPlayerPlugin)
+        //.add_plugin(NoCameraPlayerPlugin)
         .add_plugin(MacroUtils {})
         .add_plugin(MacroCamPlugin {})
         //Test scene spawning

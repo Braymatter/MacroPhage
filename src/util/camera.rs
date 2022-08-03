@@ -4,6 +4,8 @@ use leafwing_input_manager::prelude::ActionState;
 
 use crate::game::controller::PlayerAction;
 
+use super::mouse::MousePosition;
+
 #[derive(Component, Debug)]
 pub struct MacroPhageCamComp;
 
@@ -12,6 +14,7 @@ impl Plugin for MacroCamPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_camera);
         app.add_system(pan_cam);
+        app.add_system(pan_cam_mouse);
         app.add_system(zoom_cam);
         app.add_system(look_cam);
     }
@@ -96,6 +99,50 @@ pub fn pan_cam(
             let translation = transform.down() * cam_state.pan_speed * time.delta_seconds();
             transform.translation += translation;
         }
+    }
+}
+
+fn pan_cam_mouse(
+    mut camera: Query<(&CameraState, &mut Transform)>,
+    mouse_pos: Res<MousePosition>,
+    time: Res<Time>,
+) {
+    let (state, mut transform) = camera.single_mut();
+
+    let pan_radius = 0.6;
+    //Controls speed boost at edge of screen
+    let modifier = 5.0;
+
+    if !state.should_pan {
+        return;
+    }
+
+    if mouse_pos.ndc.x < -1.0 + pan_radius {
+        //Gross but works
+        let speed_modifier = -modifier * (mouse_pos.ndc.x + 1.0 - pan_radius) / pan_radius;
+        let translation =
+            transform.left() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+
+    if mouse_pos.ndc.x > 1.0 - pan_radius {
+        let speed_modifier = modifier * (mouse_pos.ndc.x - 1.0 + pan_radius) / pan_radius;
+        let translation =
+            transform.right() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+
+    if mouse_pos.ndc.y > 1.0 - pan_radius {
+        let speed_modifier = modifier * (mouse_pos.ndc.y - 1.0 + pan_radius) / pan_radius;
+        let translation = transform.up() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+
+    if mouse_pos.ndc.y < -1.0 + pan_radius {
+        let speed_modifier = -modifier * (mouse_pos.ndc.y + 1.0 - pan_radius) / pan_radius;
+        let translation =
+            transform.down() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
     }
 }
 
