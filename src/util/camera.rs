@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{input::mouse::MouseWheel, prelude::*};
 use bevy_mod_picking::PickingCameraBundle;
 use leafwing_input_manager::prelude::ActionState;
 
@@ -149,6 +149,7 @@ fn pan_cam_mouse(
 // TODO: Go back and rewrite this to lerp to a target y-level
 pub fn zoom_cam(
     action_query: Query<&ActionState<PlayerAction>>,
+    mut mouse_wheel: EventReader<MouseWheel>,
     mut player_cam_query: Query<(&mut Transform, &CameraState)>,
     time: Res<Time>,
 ) {
@@ -171,6 +172,24 @@ pub fn zoom_cam(
 
         if actions.pressed(PlayerAction::ZoomOut) {
             translation += transform.back() * (time.delta_seconds() * cam_state.zoom_speed);
+        }
+
+        for wheel_event in mouse_wheel.iter() {
+            match wheel_event.unit {
+                bevy::input::mouse::MouseScrollUnit::Line => {
+                    translation += transform.forward()
+                        * wheel_event.y
+                        * time.delta_seconds()
+                        * cam_state.zoom_speed;
+                }
+                bevy::input::mouse::MouseScrollUnit::Pixel => {
+                    error!("If you're seeing this reach out about your zooming experience!");
+                    translation += transform.forward()
+                        * wheel_event.y
+                        * time.delta_seconds()
+                        * cam_state.zoom_speed;
+                }
+            }
         }
 
         transform.translation += translation;
