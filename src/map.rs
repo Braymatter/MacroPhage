@@ -2,33 +2,9 @@ use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
-
 use crate::util::ColorPalette;
 
-#[derive(Serialize, Deserialize)]
-pub enum Message {
-    Infrastructure(InfrastructureMessage),
-    GamePlay,
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum NetworkingState {
-    Host(HostState),
-    Client(ClientState),
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct ClientId;
-
-#[derive(Serialize, Deserialize)]
-pub struct HostState {
-    clients: Vec<ClientId>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct ClientState;
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Component)]
 pub enum InfrastructureMessage {
     Ping,
     HostMatch,
@@ -36,18 +12,18 @@ pub enum InfrastructureMessage {
     JoinMatch(String),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub enum Mutation {
     TriggerRecombinator {
         target: u32,
         cost: u32,
     },
     AddVector {
-        relation: NodeRelation,
+        relation: Vector,
         cost: u32,
     },
     RemoveVector {
-        relation: NodeRelation,
+        relation: Vector,
         cost: u32,
     },
     ChangeReplicatorType {
@@ -57,10 +33,7 @@ pub enum Mutation {
     },
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct NodeRelation(u32, u32);
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum PhageType {
     UV,
     Electro,
@@ -90,7 +63,7 @@ pub enum RecombinatorEffect {
     GiveOccupierQubits { amt: u32 },
     GiveOccupierAdvantage,
     DestroyOccupierIfType { phage_type: PhageType },
-    PullPhageForCombat(NodeRelation),
+    PullPhageForCombat(Vector),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -181,7 +154,7 @@ impl Vector {
 }
 
 /// Defines a Force
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Force(u32);
 
 impl Force {
@@ -348,6 +321,56 @@ impl GameMap {
             })
             .insert(Name::new("Node"))
             .id()
+    }
+}
+
+#[derive(Clone)]
+pub struct PlayerMutationEvent{
+    pub mutation: Mutation,
+    pub force: Force,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct MutationFailed{
+    pub mutation: Mutation
+}
+
+pub fn process_map_mutations(mut mutation_events: EventReader<PlayerMutationEvent>, mut map_query: Query<(&mut GameMap, Entity)>, mut mutation_failure_ev: EventWriter<MutationFailed>){
+    let (mut map, ent) = map_query.single_mut();
+
+    for mutation_ev in mutation_events.iter(){
+        match &mutation_ev.mutation {
+            //Recombinators Trigger at the beginning of the next interval
+            Mutation::TriggerRecombinator { target, cost } => {
+
+            },
+
+            //Vectors are removed at time of mutation
+            Mutation::RemoveVector { relation, cost } => {
+                if let Ok(()) = map.remove_vector(*relation){
+
+                }else{
+                    mutation_failure_ev.send(MutationFailed { mutation: mutation_ev.mutation.clone()})
+                }
+            },
+
+            //Vectors are added at time of mutation
+            Mutation::AddVector { relation, cost } => {
+                
+                if let Ok(()) = map.add_vector(*relation){
+                    
+                }else{
+                    mutation_failure_ev.send(MutationFailed { mutation: mutation_ev.mutation.clone() })
+                }
+            },
+
+            //Replicator Output is changed at time of mutation and counter is reset
+            Mutation::ChangeReplicatorType { replicator, new_type, cost } => {
+
+            }
+        }
+
+
     }
 }
 
