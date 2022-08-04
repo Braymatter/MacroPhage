@@ -136,7 +136,7 @@ pub struct VectorId(u32);
 pub struct Occupant(Force, PhageType);
 
 /// Defines a relationship between two cells
-#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Component, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Vector(pub NodeId, pub NodeId);
 
 impl Vector {
@@ -187,7 +187,7 @@ pub enum GameMove {
 
 /// Data Only representation of a Game Map, Game acts as a pure state-machine
 #[derive(Component, Serialize, Deserialize)]
-pub struct GameMap {
+pub struct GameState {
     pub nodes: HashMap<NodeId, Node>,
     //connections: HashMap<NodeId, Vec<VectorId>>,
     pub vectors: Vec<Vector>,
@@ -208,7 +208,7 @@ pub enum PlayerActionError {
     NodeIdDoesNotExist(NodeId),
 }
 
-impl GameMap {
+impl GameState {
     pub fn create_node(&mut self, force: Force, position: Vec3) -> NodeId {
         self.nodes.insert(
             self.next_free_id,
@@ -337,7 +337,7 @@ pub struct MutationFailed {
 
 pub fn process_map_mutations(
     mut mutation_events: EventReader<PlayerMutationEvent>,
-    mut map_query: Query<(&mut GameMap, Entity)>,
+    mut map_query: Query<(&mut GameState, Entity)>,
     mut mutation_failure_ev: EventWriter<MutationFailed>,
 ) {
     let (mut map, ent) = map_query.single_mut();
@@ -383,7 +383,7 @@ pub fn spawn_map(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     level_manager: Res<LevelManagerRes>,
-    mut maps: Query<(&GameMap, Entity)>,
+    mut maps: Query<(&GameState, Entity)>,
 ) {
     if !level_manager.is_changed() {
         return;
@@ -410,7 +410,7 @@ pub fn spawn_map(
 
     let reader = BufReader::new(file);
 
-    let map: GameMap = serde_json::from_reader(reader).unwrap();
+    let map: GameState = serde_json::from_reader(reader).unwrap();
 
     let map_ent = commands
         .spawn_bundle(TransformBundle::default())
@@ -439,6 +439,7 @@ pub fn spawn_map(
                     ..default()
                 })
                 .insert(Name::new("Vector"))
+                .insert(*vector)
                 .id(),
         );
     }
@@ -461,7 +462,7 @@ mod tests {
         let num_players = 5;
 
         let name: String = "Hello Map".to_string();
-        let mut map = GameMap {
+        let mut map = GameState {
             nodes,
             next_free_id: NodeId(0),
             vectors,
