@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
 use crate::{
-    map::LevelManagerRes,
+    game::LevelManagerRes,
     util::{
         camera::{CameraState, PlayerCamMarker},
         MapManifest,

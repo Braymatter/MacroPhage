@@ -1,13 +1,12 @@
 use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::EguiPlugin;
-use bevy_flycam::NoCameraPlayerPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState};
 use macrophage::{
     audio::GameAudioPlugin,
     game::controller::PlayerAction,
-    map::{spawn_map, LevelManagerRes},
+    game::{map::spawn_map, LevelManagerRes},
     ui::UIStatePlugin,
     util::{camera::MacroCamPlugin, MacroUtils},
 };
