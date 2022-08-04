@@ -1,8 +1,10 @@
-use bevy::prelude::*;
+use bevy::{input::mouse::MouseWheel, prelude::*};
 use bevy_mod_picking::PickingCameraBundle;
 use leafwing_input_manager::prelude::ActionState;
 
 use crate::game::controller::PlayerAction;
+
+use super::mouse::MousePosition;
 
 #[derive(Component, Debug)]
 pub struct MacroPhageCamComp;
@@ -12,6 +14,7 @@ impl Plugin for MacroCamPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_camera);
         app.add_system(pan_cam);
+        app.add_system(pan_cam_mouse);
         app.add_system(zoom_cam);
         app.add_system(look_cam);
     }
@@ -99,9 +102,54 @@ pub fn pan_cam(
     }
 }
 
+fn pan_cam_mouse(
+    mut camera: Query<(&CameraState, &mut Transform)>,
+    mouse_pos: Res<MousePosition>,
+    time: Res<Time>,
+) {
+    let (state, mut transform) = camera.single_mut();
+
+    let pan_radius = 0.6;
+    //Controls speed boost at edge of screen
+    let modifier = 5.0;
+
+    if !state.should_pan {
+        return;
+    }
+
+    if mouse_pos.ndc.x < -1.0 + pan_radius {
+        //Gross but works
+        let speed_modifier = -modifier * (mouse_pos.ndc.x + 1.0 - pan_radius) / pan_radius;
+        let translation =
+            transform.left() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+
+    if mouse_pos.ndc.x > 1.0 - pan_radius {
+        let speed_modifier = modifier * (mouse_pos.ndc.x - 1.0 + pan_radius) / pan_radius;
+        let translation =
+            transform.right() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+
+    if mouse_pos.ndc.y > 1.0 - pan_radius {
+        let speed_modifier = modifier * (mouse_pos.ndc.y - 1.0 + pan_radius) / pan_radius;
+        let translation = transform.up() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+
+    if mouse_pos.ndc.y < -1.0 + pan_radius {
+        let speed_modifier = -modifier * (mouse_pos.ndc.y + 1.0 - pan_radius) / pan_radius;
+        let translation =
+            transform.down() * state.pan_speed * time.delta_seconds() * speed_modifier;
+        transform.translation += translation;
+    }
+}
+
 // TODO: Go back and rewrite this to lerp to a target y-level
 pub fn zoom_cam(
     action_query: Query<&ActionState<PlayerAction>>,
+    mut mouse_wheel: EventReader<MouseWheel>,
     mut player_cam_query: Query<(&mut Transform, &CameraState)>,
     time: Res<Time>,
 ) {
@@ -124,6 +172,24 @@ pub fn zoom_cam(
 
         if actions.pressed(PlayerAction::ZoomOut) {
             translation += transform.back() * (time.delta_seconds() * cam_state.zoom_speed);
+        }
+
+        for wheel_event in mouse_wheel.iter() {
+            match wheel_event.unit {
+                bevy::input::mouse::MouseScrollUnit::Line => {
+                    translation += transform.forward()
+                        * wheel_event.y
+                        * time.delta_seconds()
+                        * cam_state.zoom_speed;
+                }
+                bevy::input::mouse::MouseScrollUnit::Pixel => {
+                    error!("If you're seeing this reach out about your zooming experience!");
+                    translation += transform.forward()
+                        * wheel_event.y
+                        * time.delta_seconds()
+                        * cam_state.zoom_speed;
+                }
+            }
         }
 
         transform.translation += translation;

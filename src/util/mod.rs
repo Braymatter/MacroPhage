@@ -1,5 +1,8 @@
 use bevy::prelude::{Color, Plugin};
+
+use self::mouse::MousePlugin;
 pub mod camera;
+pub mod mouse;
 pub struct MapManifest {
     pub map_files: Vec<String>,
 }
@@ -55,7 +58,8 @@ impl Plugin for MacroUtils {
             );
         }
 
-        app.insert_resource(MapManifest { map_files });
+        app.insert_resource(MapManifest { map_files })
+            .add_plugin(MousePlugin);
     }
 }
 
