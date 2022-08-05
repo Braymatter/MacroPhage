@@ -8,11 +8,10 @@ use macrophage::{
     game::controller::PlayerAction,
     game::{map::spawn_map, LevelManagerRes},
     ui::UIStatePlugin,
-    util::{
-        camera::MacroCamPlugin,
-        MacroUtils,
-    },
+    ui::mousecursor_egui::MouseCursorPlugin,
+    util::{camera::MacroCamPlugin, MacroUtils},
 };
+
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
@@ -36,6 +35,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         //Egui (must be before inspector)
         .add_plugin(EguiPlugin)
+        .add_plugin(MouseCursorPlugin {})
         //Egui Inspector
         .insert_resource(WorldInspectorParams {
             enabled: false,

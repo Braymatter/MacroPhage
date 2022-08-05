@@ -3,6 +3,8 @@ mod gamelobby;
 mod mainmenu;
 mod settingsmenu;
 
+pub mod mousecursor_egui;
+
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use iyes_loopless::prelude::*;
