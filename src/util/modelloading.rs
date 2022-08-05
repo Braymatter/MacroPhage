@@ -1,11 +1,11 @@
 use bevy::prelude::*;
-use bevy_asset_loader::{AssetCollection, AssetLoader};
+use bevy_asset_loader::prelude::*;
 use iyes_progress::{ProgressCounter, ProgressPlugin};
 
 pub struct ModelPlugin;
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
-pub enum LoadingState {
+pub enum LoadingStates {
     AssetLoading,
     Loaded,
 }
@@ -14,17 +14,17 @@ impl Plugin for ModelPlugin {
     fn build(&self, app: &mut App) {
         //Loopless states aren't working with the asset loader plugin for some cursed reason...
         //Probably they have weird version compat problems
-        app.add_state(LoadingState::AssetLoading);
-        AssetLoader::new(LoadingState::AssetLoading)
-            //.continue_to_state(LoadingState::Loaded)
-            .with_collection::<ModelAssets>()
-            .with_collection::<ModelAssets2>()
-            .build(app);
-        app.add_plugin(
-            ProgressPlugin::new(LoadingState::AssetLoading).continue_to(LoadingState::Loaded),
-        )
-        .add_system(model_loading_progress)
-        .add_system_set(SystemSet::on_enter(LoadingState::Loaded).with_system(spawn_gltfs));
+        app.add_state(LoadingStates::AssetLoading)
+            .add_loading_state(
+                LoadingState::new(LoadingStates::AssetLoading)
+                    .with_collection::<ModelAssets>()
+                    .with_collection::<ModelAssets2>(),
+            )
+            .add_plugin(
+                ProgressPlugin::new(LoadingStates::AssetLoading).continue_to(LoadingStates::Loaded),
+            )
+            .add_system(model_loading_progress)
+            .add_system_set(SystemSet::on_enter(LoadingStates::Loaded).with_system(spawn_gltfs));
     }
 }
 
@@ -69,7 +69,7 @@ pub fn spawn_model(commands: &mut Commands, asset: Handle<Scene>, translation: V
             Transform::from_scale(Vec3::splat(1.0)).with_translation(translation),
         ))
         .with_children(|commands| {
-            commands.spawn_scene(asset.clone());
+            //commands.spawn_scene(asset.clone());
         });
 }
 

@@ -7,11 +7,10 @@ use macrophage::{
     audio::GameAudioPlugin,
     game::controller::PlayerAction,
     game::{map::spawn_map, LevelManagerRes},
-    ui::UIStatePlugin,
     ui::mousecursor_egui::MouseCursorPlugin,
+    ui::UIStatePlugin,
     util::{camera::MacroCamPlugin, MacroUtils},
 };
-
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
