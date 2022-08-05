@@ -8,7 +8,10 @@ use macrophage::{
     game::controller::PlayerAction,
     game::{map::spawn_map, LevelManagerRes},
     ui::UIStatePlugin,
-    util::{camera::MacroCamPlugin, MacroUtils},
+    util::{
+        camera::MacroCamPlugin,
+        MacroUtils,
+    },
 };
 
 pub const HEIGHT: f32 = 900.0;
