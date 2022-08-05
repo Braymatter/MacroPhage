@@ -1,4 +1,7 @@
-use crate::util::ColorPalette;
+use crate::util::{
+    modelloading::{spawn_model, NodeTenentAssets},
+    ColorPalette,
+};
 
 use self::controller::PlayerAction;
 use bevy::{prelude::*, utils::HashMap};
@@ -8,11 +11,12 @@ use serde::{Deserialize, Serialize};
 pub mod controller;
 pub mod gamerunner;
 pub mod map;
+pub mod mutationinput;
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub enum Mutation {
     TriggerRecombinator {
-        target: u32,
+        target: NodeId,
         cost: u32,
     },
     AddVector {
@@ -24,7 +28,7 @@ pub enum Mutation {
         cost: u32,
     },
     ChangeReplicatorType {
-        replicator: u32,
+        replicator: NodeId,
         new_type: PhageType,
         cost: u32,
     },
@@ -82,7 +86,7 @@ pub struct Recombinator {
 }
 
 /// Describes a discrete location on the map that can be connected to other locations
-#[derive(Component, Serialize, Deserialize)]
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Node {
     pub id: NodeId,
     pub position: Vec3,
@@ -90,7 +94,7 @@ pub struct Node {
     pub tenant: NodeTenant,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum NodeTenant {
     Cell { cell: Cell },
     Replicator { replicator: Replicator },
@@ -103,12 +107,12 @@ pub enum CellType {
     Generator { qubits_per_phase: u32 },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Cell {
     occupant: Option<Occupant>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Replicator {
     output: PhageType,
 
@@ -116,10 +120,10 @@ pub struct Replicator {
     speed: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Nexus {}
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Generator {
     amt: u32,
     speed: u32,
@@ -129,7 +133,7 @@ pub struct Generator {
 pub struct VectorId(u32);
 
 /// Defines the team and occupying phage type
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Occupant(Force, PhageType);
 
 /// Defines a relationship between two cells
@@ -276,36 +280,25 @@ impl GameState {
         &self,
         node: &Node,
         commands: &mut Commands,
+        node_assets: &Res<NodeTenentAssets>,
         meshes: &mut ResMut<Assets<Mesh>>,
         materials: &mut ResMut<Assets<StandardMaterial>>,
     ) -> Entity {
-        let shape = match &node.tenant {
-            NodeTenant::Cell { cell: _ } => Mesh::from(shape::Icosphere {
-                radius: 1.0,
-                subdivisions: 5,
-            }),
-            NodeTenant::Replicator { replicator: _ } => Mesh::from(shape::Cube { size: 1.0 }),
-            NodeTenant::Nexus { nexus: _ } => Mesh::from(shape::Torus {
-                radius: 0.5,
-                ring_radius: 0.25,
-                subdivisions_segments: 20,
-                subdivisions_sides: 16,
-            }),
-            NodeTenant::Generator { generator: _ } => Mesh::from(shape::Icosphere {
-                radius: 2.0,
-                subdivisions: 1,
-            }),
-        };
-
-        commands
-            .spawn_bundle(PbrBundle {
-                mesh: meshes.add(shape),
-                material: materials.add(node.force.color().into()),
-                transform: Transform::from_translation(node.position),
-                ..default()
-            })
-            .insert(Name::new("Node"))
-            .id()
+        match &node.tenant {
+            NodeTenant::Cell { cell: _ } => {
+                spawn_model(commands, node_assets.cell.clone(), meshes, node)
+            }
+            NodeTenant::Replicator { replicator: _ } => {
+                spawn_model(commands, node_assets.replicator.clone(), meshes, node)
+            }
+            NodeTenant::Nexus { nexus: _ } => {
+                spawn_model(commands, node_assets.nexus.clone(), meshes, node)
+            }
+            //FIXME this needs to change when the model exists
+            NodeTenant::Generator { generator: _ } => {
+                spawn_model(commands, node_assets.cell.clone(), meshes, node)
+            }
+        }
     }
 }
 
