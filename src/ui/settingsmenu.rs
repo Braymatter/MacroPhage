@@ -3,13 +3,11 @@ use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ElementState},
     prelude::*,
 };
-use bevy_egui::{
-    egui::{Align2, Grid, Window},
-    EguiContext,
-};
+use bevy_egui::{egui::{Align2, Grid, Window}, egui, EguiContext};
 use leafwing_input_manager::{prelude::*, user_input::InputButton};
 
 use crate::{game::controller::PlayerAction, ui::UIState};
+use crate::util::ui::set_ui_style;
 
 use super::UIStateRes;
 
@@ -37,15 +35,32 @@ struct BindingConflict {
     input_button: InputButton,
 }
 
+pub struct Images {
+    save: Handle<Image>,
+}
+
+impl FromWorld for Images {
+    fn from_world(world: &mut World) -> Self {
+        let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+        Self {
+            save: asset_server.load("UI/save_and_exit.png"),
+        }
+    }
+}
+
 pub fn controls_window(
     mut commands: Commands,
-    mut egui: ResMut<EguiContext>,
+    mut egui_context: ResMut<EguiContext>,
     windows: Res<Windows>,
     player_controls: Query<&InputMap<PlayerAction>>,
     mut ui_state: ResMut<UIStateRes>,
+    images: Local<Images>,
 ) {
+    let btn_size = egui::vec2(100., 40.);
+    let save_and_return_btn = egui_context.add_image(images.save.clone());
+
     let main_window = windows.get_primary().unwrap();
-    let window_width_margin = egui.ctx_mut().style().spacing.window_margin.left * 2.0;
+    let window_width_margin = egui_context.ctx_mut().style().spacing.window_margin.left * 2.0;
 
     let controls = player_controls.single();
 
@@ -54,7 +69,9 @@ pub fn controls_window(
         .collapsible(false)
         .resizable(false)
         .default_width(main_window.width() - UI_MARGIN * 2.0 - window_width_margin)
-        .show(egui.ctx_mut(), |ui| {
+        .show(egui_context.ctx_mut(), |ui| {
+            set_ui_style(ui);
+
             const INPUT_VARIANTS: usize = 3;
             const COLUMNS_COUNT: usize = INPUT_VARIANTS + 1;
 
@@ -86,7 +103,8 @@ pub fn controls_window(
                         ui.end_row();
                     }
                 });
-            let return_to_menu = ui.button("Save And Return").clicked();
+            let return_to_menu = ui.add(egui::ImageButton::new(save_and_return_btn, btn_size)).clicked();
+
             if return_to_menu {
                 warn!("Should Save Settings Here");
                 ui_state.current_state = UIState::MainMenu;

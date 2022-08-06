@@ -5,14 +5,16 @@ use bevy_egui::{egui, EguiContext};
 pub struct MouseCursorPlugin {}
 
 pub struct MouseCursor {
-    texture: Handle<Image>
+    normal: Handle<Image>,
+    clicked: Handle<Image>,
 }
 
 impl FromWorld for MouseCursor {
     fn from_world(world: &mut World) -> Self {
         let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
         Self {
-            texture: asset_server.load(MOUSE_PATH),
+            normal: asset_server.load(MOUSE_PATH_NORMAL),
+            clicked: asset_server.load(MOUSE_PATH_CLICKED),
         }
     }
 }
@@ -21,12 +23,10 @@ impl FromWorld for MouseCursor {
 pub struct Mouse2dCamera {}
 
 /// Texture data
-
-// TODO: properly scaled down image with not terrible filtering
-// ask Fethur to export a 64x64
-pub const MOUSE_PATH: &str = "textures/Mouse_Small.png";
+pub const MOUSE_PATH_NORMAL: &str = "textures/mouse_normal.png";
+pub const MOUSE_PATH_CLICKED: &str = "textures/mouse_clicked.png";
 pub const MOUSE_SIZE: (f32, f32) = (32., 32.);
-pub const MOUSE_OFFSET: (f32, f32) = (-4., 0.);
+pub const MOUSE_OFFSET: (f32, f32) = (0., 0.);
 
 /// Tracks the mouse on the screen and renders a cursor on top of its position.
 /// This uses direct egui rendering due to its complexity
@@ -41,9 +41,15 @@ impl Plugin for MouseCursorPlugin {
 fn move_cursor(
     mut egui_context: ResMut<EguiContext>,
     mut windows: ResMut<Windows>,
-    mouse: Local<MouseCursor>
+    mouse: Local<MouseCursor>,
+    buttons: Res<Input<MouseButton>>,
 ) {
-    let img = egui_context.add_image(mouse.texture.clone());
+    let img =  if buttons.any_pressed([MouseButton::Left, MouseButton::Right]) {
+        egui_context.add_image(mouse.clicked.clone())
+    } else {
+        egui_context.add_image(mouse.normal.clone())
+    };
+
     let ctx = egui_context.ctx_mut();
     let position = ctx.input().pointer.hover_pos()
         .map(|coord| coord + egui::vec2(MOUSE_OFFSET.0, MOUSE_OFFSET.1));
