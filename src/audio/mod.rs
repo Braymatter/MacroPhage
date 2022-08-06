@@ -8,7 +8,7 @@ use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
 use crate::game::controller::PlayerAction;
-use crate::ui::ReadWriteGameSettings;
+use crate::game::settings::ReadWriteGameSettings;
 
 pub struct GameAudioPlugin;
 

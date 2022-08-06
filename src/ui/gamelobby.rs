@@ -1,11 +1,9 @@
-use bevy::ecs::event::Events;
 use bevy_egui::{
     egui::{Align2, Window},
     EguiContext,
 };
 
 use bevy::prelude::*;
-use bevy::window::WindowResized;
 use bevy_egui::egui::{Color32, Frame};
 use bevy_inspector_egui::egui;
 

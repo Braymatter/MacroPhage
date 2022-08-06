@@ -1,5 +1,4 @@
 use bevy::{prelude::*, window::PresentMode};
-use bevy::window::WindowMode::BorderlessFullscreen;
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
@@ -10,11 +9,9 @@ use macrophage::{
     game::{map::spawn_map, LevelManagerRes},
     ui::UIStatePlugin,
     ui::mousecursor_egui::MouseCursorPlugin,
-    ui::GameSettings,
     util::{camera::MacroCamPlugin, MacroUtils},
 };
-use macrophage::ui::{ReadWriteGameSettings, SettingsPlugin};
-
+use macrophage::game::settings::{ReadWriteGameSettings, SettingsPlugin};
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
@@ -29,7 +26,6 @@ fn main() {
             title: "Macro:Phage".to_string(),
             present_mode: PresentMode::Fifo,
             resizable: true,
-            //mode: BorderlessFullscreen,
             ..Default::default()
         })
         .insert_resource(LevelManagerRes {

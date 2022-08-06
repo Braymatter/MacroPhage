@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub mod controller;
 pub mod gamerunner;
 pub mod map;
+pub mod settings;
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub enum Mutation {

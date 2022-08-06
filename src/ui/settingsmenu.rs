@@ -12,7 +12,7 @@ use directories::ProjectDirs;
 use leafwing_input_manager::{prelude::*, user_input::InputButton};
 
 use crate::{game::controller::PlayerAction, ui::UIState};
-use crate::ui::{GameSettings, ReadWriteGameSettings};
+use crate::game::settings::ReadWriteGameSettings;
 use crate::util::ui::set_ui_style;
 
 use super::UIStateRes;
@@ -66,7 +66,7 @@ impl FromWorld for Images {
 pub fn controls_window(
     mut commands: Commands,
     mut egui_context: ResMut<EguiContext>,
-    mut windows: ResMut<Windows>,
+    windows: ResMut<Windows>,
     player_controls: Query<&InputMap<PlayerAction>>,
     mut ui_state: ResMut<UIStateRes>,
     mut is_initialized: Local<bool>,
@@ -152,7 +152,7 @@ pub fn controls_window(
                 if return_to_menu {
                     // first save to struct
                     game_settings.actual_settings = game_settings.pending_settings;
-                    
+
                     // now serialize to file
                     let json = serde_json::to_string(&game_settings.actual_settings);
                     if let Some(project_dirs) = ProjectDirs::from("", "", "macrophage") {
