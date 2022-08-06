@@ -8,6 +8,7 @@ use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
 use crate::game::controller::PlayerAction;
+use crate::ui::ReadWriteGameSettings;
 
 pub struct GameAudioPlugin;
 
@@ -39,6 +40,7 @@ impl Plugin for GameAudioPlugin {
             .add_audio_channel::<SfxChannel>()
             .add_event::<PlayRandomSfx>()
             .add_startup_system(play_bgm)
+            .add_system(change_volume)
             .add_system(play_sfx)
             .add_system(audio_example_usage)
             .add_startup_system(load_all_sfx);
@@ -110,4 +112,17 @@ fn play_bgm(asset_server: Res<AssetServer>, bgm: Res<AudioChannel<BgmChannel>>) 
     bgm_path.push("music");
     bgm_path.push("GameplayMusicROUGH.wav");
     bgm.play_looped(asset_server.load(bgm_path));
+}
+
+fn change_volume(
+    bgm: Res<AudioChannel<BgmChannel>>,
+    game_settings: ResMut<ReadWriteGameSettings>,
+) {
+    if game_settings.is_changed() {
+        if game_settings.actual_settings.music_enabled {
+            bgm.set_volume(1.0);
+        } else {
+            bgm.set_volume(0.0);
+        }
+    }
 }

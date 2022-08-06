@@ -13,7 +13,7 @@ use macrophage::{
     ui::GameSettings,
     util::{camera::MacroCamPlugin, MacroUtils},
 };
-use macrophage::ui::ReadWriteGameSettings;
+use macrophage::ui::{ReadWriteGameSettings, SettingsPlugin};
 
 
 pub const HEIGHT: f32 = 900.0;
@@ -36,6 +36,7 @@ fn main() {
             current_level: None,
         })
         .init_resource::<ReadWriteGameSettings>()
+        .add_plugin(SettingsPlugin)
         .add_plugin(UIStatePlugin)
         .add_plugins(DefaultPlugins)
         //Egui (must be before inspector)

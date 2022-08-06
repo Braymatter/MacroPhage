@@ -1,3 +1,5 @@
+use std::fs::{create_dir_all, File};
+use std::io::Write;
 use bevy::{
     ecs::system::SystemParam,
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ElementState},
@@ -6,6 +8,7 @@ use bevy::{
 use bevy::window::WindowMode;
 use bevy_egui::{egui::{Align2, Grid, Window}, egui, EguiContext};
 use bevy_egui::egui::{Color32, Frame};
+use directories::ProjectDirs;
 use leafwing_input_manager::{prelude::*, user_input::InputButton};
 
 use crate::{game::controller::PlayerAction, ui::UIState};
@@ -126,7 +129,8 @@ pub fn controls_window(
                     }
                 });
 
-            ui.checkbox(&mut game_settings.pending_settings.use_hardware_mouse, "Use hardware mouse?");
+            ui.checkbox(&mut game_settings.pending_settings.use_hardware_mouse, "Use hardware mouse");
+            ui.checkbox(&mut game_settings.pending_settings.music_enabled, "Music enabled");
 
             egui::ComboBox::from_label("Display mode")
                 .selected_text(format!("{:?}", game_settings.pending_settings.window_display_mode))
@@ -146,11 +150,21 @@ pub fn controls_window(
                 ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
 
                 if return_to_menu {
-                    warn!("Should Save Settings Here");
                     // first save to struct
                     game_settings.actual_settings = game_settings.pending_settings;
-                    // now modify various settings
-                    windows.get_primary_mut().unwrap().set_mode(game_settings.actual_settings.window_display_mode);
+                    
+                    // now serialize to file
+                    let json = serde_json::to_string(&game_settings.actual_settings);
+                    if let Some(project_dirs) = ProjectDirs::from("", "", "macrophage") {
+                        let path = project_dirs.config_dir();
+                        create_dir_all(path).unwrap_or_else(|_| eprintln!("Error creating directories on config path {}.", path.display()));
+                        let file = File::create(path.join("settings.json"));
+                        match file {
+                            Ok(mut file) => file.write_all(json.unwrap().as_bytes()).unwrap_or_else(|_| eprintln!("File write error on settings.json!")),
+                            Err(_) => eprintln!("Error accessing settings.json file; it may be open in another program."),
+                        };
+
+                    }
                     ui_state.current_state = UIState::MainMenu;
                 }
 

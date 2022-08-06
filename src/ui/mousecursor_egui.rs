@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::camera::CameraTypePlugin;
 use bevy_egui::{egui, EguiContext};
+use crate::ui::ReadWriteGameSettings;
 
 pub struct MouseCursorPlugin {}
 
@@ -43,26 +44,28 @@ fn move_cursor(
     mut windows: ResMut<Windows>,
     mouse: Local<MouseCursor>,
     buttons: Res<Input<MouseButton>>,
+    game_settings: Res<ReadWriteGameSettings>,
 ) {
-    let img =  if buttons.any_pressed([MouseButton::Left, MouseButton::Right]) {
-        egui_context.add_image(mouse.clicked.clone())
-    } else {
-        egui_context.add_image(mouse.normal.clone())
-    };
+    if !game_settings.actual_settings.use_hardware_mouse {
+        let img =  if buttons.any_pressed([MouseButton::Left, MouseButton::Right]) {
+            egui_context.add_image(mouse.clicked.clone())
+        } else {
+            egui_context.add_image(mouse.normal.clone())
+        };
 
-    let ctx = egui_context.ctx_mut();
-    let position = ctx.input().pointer.hover_pos()
-        .map(|coord| coord + egui::vec2(MOUSE_OFFSET.0, MOUSE_OFFSET.1));
+        let ctx = egui_context.ctx_mut();
+        let position = ctx.input().pointer.hover_pos()
+            .map(|coord| coord + egui::vec2(MOUSE_OFFSET.0, MOUSE_OFFSET.1));
 
-    egui::Area::new("cursor")
-        .fixed_pos(position.unwrap_or(egui::pos2(0., 0.)))
-        .order(egui::Order::Tooltip)
-        .interactable(false)
-        .show(ctx, |ui| {
-            ui.add(egui::Image::new(img, egui::vec2(MOUSE_SIZE.0, MOUSE_SIZE.1)))
-        });
+        egui::Area::new("cursor")
+            .fixed_pos(position.unwrap_or(egui::pos2(0., 0.)))
+            .order(egui::Order::Tooltip)
+            .interactable(false)
+            .show(ctx, |ui| {
+                ui.add(egui::Image::new(img, egui::vec2(MOUSE_SIZE.0, MOUSE_SIZE.1)))
+            });
+    }
 
-    // TODO: base this off a "Use Hardware Mouse" setting
     let window = windows.get_primary_mut().unwrap();
-    window.set_cursor_visibility(false);
+    window.set_cursor_visibility(game_settings.actual_settings.use_hardware_mouse);
 }
