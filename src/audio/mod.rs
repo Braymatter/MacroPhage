@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf};
 
 use bevy::{prelude::*, utils::HashMap};
+use bevy::ecs::system::QuerySingleError;
 use bevy_kira_audio::{AudioSource, *};
 use leafwing_input_manager::prelude::ActionState;
 use rand::seq::SliceRandom;
@@ -51,10 +52,18 @@ fn audio_example_usage(
     mut sfx_event: EventWriter<PlayRandomSfx>,
     actions: Query<&ActionState<PlayerAction>>,
 ) {
-    let actions = actions.single();
-
-    if actions.just_pressed(PlayerAction::Scream) {
-        sfx_event.send(PlayRandomSfx(Sfx::VectorSlide));
+    match actions.get_single() {
+        Ok(action) => {
+            if action.just_pressed(PlayerAction::Scream) {
+                sfx_event.send(PlayRandomSfx(Sfx::VectorSlide));
+            }
+        }
+        Err(QuerySingleError::NoEntities(_)) => {
+            println!("[Audio Example] There is no ActionState loaded yet.");
+        }
+        Err(QuerySingleError::MultipleEntities(_)) => {
+            panic!("[Audio Example] Error: There is more than one ActionState!");
+        }
     }
 }
 

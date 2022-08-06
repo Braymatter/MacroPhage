@@ -1,4 +1,5 @@
 use bevy::{input::mouse::MouseWheel, prelude::*};
+use bevy::ecs::system::QuerySingleError;
 use bevy_mod_picking::PickingCameraBundle;
 use leafwing_input_manager::prelude::ActionState;
 
@@ -72,34 +73,44 @@ pub fn pan_cam(
     mut player_cam_query: Query<(&mut Transform, &CameraState)>,
     time: Res<Time>,
 ) {
-    let actions = action_query.single();
+    match action_query.get_single() {
+        Ok(actions) => {
+            for cam in player_cam_query.iter_mut() {
+                let (mut transform, cam_state) = cam;
+                if !cam_state.should_pan {
+                    continue;
+                }
 
-    for cam in player_cam_query.iter_mut() {
-        let (mut transform, cam_state) = cam;
-        if !cam_state.should_pan {
-            continue;
+                if actions.pressed(PlayerAction::PanLeft) {
+                    let translation = transform.left() * cam_state.pan_speed * time.delta_seconds();
+                    transform.translation += translation;
+                }
+
+                if actions.pressed(PlayerAction::PanRight) {
+                    let translation = transform.right() * cam_state.pan_speed * time.delta_seconds();
+                    transform.translation += translation;
+                }
+
+                if actions.pressed(PlayerAction::PanUp) {
+                    let translation = transform.up() * cam_state.pan_speed * time.delta_seconds();
+                    transform.translation += translation;
+                }
+
+                if actions.pressed(PlayerAction::PanDown) {
+                    let translation = transform.down() * cam_state.pan_speed * time.delta_seconds();
+                    transform.translation += translation;
+                }
+            }
         }
-
-        if actions.pressed(PlayerAction::PanLeft) {
-            let translation = transform.left() * cam_state.pan_speed * time.delta_seconds();
-            transform.translation += translation;
+        Err(QuerySingleError::NoEntities(_)) => {
+            println!("[Pan Cam] There is no ActionState loaded yet.");
         }
-
-        if actions.pressed(PlayerAction::PanRight) {
-            let translation = transform.right() * cam_state.pan_speed * time.delta_seconds();
-            transform.translation += translation;
-        }
-
-        if actions.pressed(PlayerAction::PanUp) {
-            let translation = transform.up() * cam_state.pan_speed * time.delta_seconds();
-            transform.translation += translation;
-        }
-
-        if actions.pressed(PlayerAction::PanDown) {
-            let translation = transform.down() * cam_state.pan_speed * time.delta_seconds();
-            transform.translation += translation;
+        Err(QuerySingleError::MultipleEntities(_)) => {
+            panic!("[Pan Cam] Error: There is more than one ActionState!");
         }
     }
+
+
 }
 
 fn pan_cam_mouse(
@@ -153,50 +164,58 @@ pub fn zoom_cam(
     mut player_cam_query: Query<(&mut Transform, &CameraState)>,
     time: Res<Time>,
 ) {
-    let actions = action_query.single();
+    match action_query.get_single() {
+        Ok(actions) => {
+            for cam in player_cam_query.iter_mut() {
+                let (mut transform, cam_state) = cam;
 
-    for cam in player_cam_query.iter_mut() {
-        let (mut transform, cam_state) = cam;
-
-        if !cam_state.should_zoom {
-            continue;
-        }
-
-        let mut translation = Vec3::ZERO;
-
-        if actions.pressed(PlayerAction::ZoomIn)
-            && transform.translation.y > cam_state.zoom_target_level
-        {
-            translation += transform.forward() * (time.delta_seconds() * cam_state.zoom_speed);
-        }
-
-        if actions.pressed(PlayerAction::ZoomOut) {
-            translation += transform.back() * (time.delta_seconds() * cam_state.zoom_speed);
-        }
-
-        for wheel_event in mouse_wheel.iter() {
-            match wheel_event.unit {
-                bevy::input::mouse::MouseScrollUnit::Line => {
-                    translation += transform.forward()
-                        * wheel_event.y
-                        * time.delta_seconds()
-                        * cam_state.zoom_speed;
+                if !cam_state.should_zoom {
+                    continue;
                 }
-                bevy::input::mouse::MouseScrollUnit::Pixel => {
-                    error!("If you're seeing this reach out about your zooming experience!");
-                    translation += transform.forward()
-                        * wheel_event.y
-                        * time.delta_seconds()
-                        * cam_state.zoom_speed;
+
+                let mut translation = Vec3::ZERO;
+
+                if actions.pressed(PlayerAction::ZoomIn)
+                    && transform.translation.y > cam_state.zoom_target_level
+                {
+                    translation += transform.forward() * (time.delta_seconds() * cam_state.zoom_speed);
+                }
+
+                if actions.pressed(PlayerAction::ZoomOut) {
+                    translation += transform.back() * (time.delta_seconds() * cam_state.zoom_speed);
+                }
+
+                for wheel_event in mouse_wheel.iter() {
+                    match wheel_event.unit {
+                        bevy::input::mouse::MouseScrollUnit::Line => {
+                            translation += transform.forward()
+                                * wheel_event.y
+                                * time.delta_seconds()
+                                * cam_state.zoom_speed;
+                        }
+                        bevy::input::mouse::MouseScrollUnit::Pixel => {
+                            error!("If you're seeing this reach out about your zooming experience!");
+                            translation += transform.forward()
+                                * wheel_event.y
+                                * time.delta_seconds()
+                                * cam_state.zoom_speed;
+                        }
+                    }
+                }
+
+                transform.translation += translation;
+
+                //Correct back to minimum.
+                if transform.translation.y < cam_state.zoom_target_level {
+                    transform.translation.y = cam_state.zoom_target_level
                 }
             }
         }
-
-        transform.translation += translation;
-
-        //Correct back to minimum.
-        if transform.translation.y < cam_state.zoom_target_level {
-            transform.translation.y = cam_state.zoom_target_level
+        Err(QuerySingleError::NoEntities(_)) => {
+            println!("[Zoom Cam] There is no ActionState loaded yet.");
+        }
+        Err(QuerySingleError::MultipleEntities(_)) => {
+            panic!("[Zoom Cam] Error: There is more than one ActionState!");
         }
     }
 }

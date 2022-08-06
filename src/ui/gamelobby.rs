@@ -4,7 +4,8 @@ use bevy_egui::{
 };
 
 use bevy::prelude::*;
-use bevy_egui::egui::{Color32, Frame};
+use bevy_egui::egui::{Color32, Frame, Stroke};
+use bevy_egui::egui::style::Margin;
 use bevy_inspector_egui::egui;
 
 use crate::{
@@ -71,6 +72,8 @@ pub fn lobby(
         .collapsible(false)
         .frame(Frame {
             fill: Color32::from_rgb(27, 51, 60),
+            inner_margin: Margin::same(8.0),
+            stroke: Stroke::new(0.6, Color32::from_rgb(36, 209, 183)),
             ..default()
         })
         .default_width(main_window.width() - UI_MARGIN * 2.0 - window_width_margin);

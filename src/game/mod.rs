@@ -4,6 +4,7 @@ use self::controller::PlayerAction;
 use bevy::{prelude::*, utils::HashMap};
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::game::settings::ReadWriteGameSettings;
 
 pub mod controller;
 pub mod gamerunner;
@@ -333,30 +334,22 @@ pub struct MutationFailed {
     pub mutation: Mutation,
 }
 
-pub fn spawn_player(mut commands: Commands) {
-    commands
-        .spawn_bundle(InputManagerBundle::<PlayerAction> {
-            //TODO: Can we export this bundle from controller.rs?
-            input_map: InputMap::new([
-                (KeyCode::Space, PlayerAction::Scream),
-                (KeyCode::Escape, PlayerAction::OpenKeyBinds),
-                (KeyCode::Grave, PlayerAction::ToggleInspector),
-                (KeyCode::W, PlayerAction::PanUp),
-                (KeyCode::S, PlayerAction::PanDown),
-                (KeyCode::A, PlayerAction::PanLeft),
-                (KeyCode::D, PlayerAction::PanRight),
-                (KeyCode::Key1, PlayerAction::HotKey1),
-                (KeyCode::Key2, PlayerAction::HotKey2),
-                (KeyCode::Key3, PlayerAction::HotKey3),
-                (KeyCode::Key4, PlayerAction::HotKey4),
-                (KeyCode::PageUp, PlayerAction::ZoomIn),
-                (KeyCode::PageDown, PlayerAction::ZoomOut),
-                (KeyCode::Left, PlayerAction::PanLeft),
-                (KeyCode::Right, PlayerAction::PanRight),
-                (KeyCode::Up, PlayerAction::PanUp),
-                (KeyCode::Down, PlayerAction::PanDown),
-            ]),
-            ..default()
-        })
-        .insert(Name::new("Player"));
+pub fn spawn_player(
+    mut commands: Commands,
+    game_settings: ResMut<ReadWriteGameSettings>,
+    mut is_initialized: Local<bool>,
+) {
+    if !*is_initialized {
+        *is_initialized = true;
+        let inputs = game_settings.actual_settings.inputs.clone();
+
+        commands
+            .spawn_bundle(InputManagerBundle::<PlayerAction> {
+                input_map: inputs,
+                ..default()
+            })
+            .insert(Name::new("Player"));
+    }
 }
+
+
