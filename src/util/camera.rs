@@ -109,7 +109,7 @@ fn pan_cam_mouse(
 ) {
     let (state, mut transform) = camera.single_mut();
 
-    let pan_radius = 0.6;
+    let pan_radius = 0.05;
     //Controls speed boost at edge of screen
     let modifier = 5.0;
 

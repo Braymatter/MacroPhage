@@ -6,6 +6,7 @@ mod settingsmenu;
 pub mod mousecursor_egui;
 
 use bevy::prelude::*;
+use bevy::window::WindowMode;
 use bevy_egui::{egui, EguiContext};
 use iyes_loopless::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
@@ -38,6 +39,30 @@ pub enum UIState {
 
 pub struct UIStateRes {
     current_state: UIState,
+}
+
+/// There are two kinds of settings in the game, the settings actually
+/// applied to the game and ones that are pending to be applied. This is necessary
+/// because egui forces us to track all values between frames ourselves.
+#[derive(Default)]
+pub struct ReadWriteGameSettings {
+    actual_settings: GameSettings,
+    pending_settings: GameSettings,
+}
+
+#[derive(Copy, Clone)]
+pub struct GameSettings {
+    use_hardware_mouse: bool,
+    window_display_mode: WindowMode,
+}
+
+impl Default for GameSettings {
+    fn default() -> Self {
+        GameSettings {
+            use_hardware_mouse: false,
+            window_display_mode: WindowMode::Windowed,
+        }
+    }
 }
 
 pub struct UIStatePlugin;

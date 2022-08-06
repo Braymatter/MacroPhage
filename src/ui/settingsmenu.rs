@@ -3,10 +3,13 @@ use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ElementState},
     prelude::*,
 };
+use bevy::window::WindowMode;
 use bevy_egui::{egui::{Align2, Grid, Window}, egui, EguiContext};
+use bevy_egui::egui::{Color32, Frame};
 use leafwing_input_manager::{prelude::*, user_input::InputButton};
 
 use crate::{game::controller::PlayerAction, ui::UIState};
+use crate::ui::{GameSettings, ReadWriteGameSettings};
 use crate::util::ui::set_ui_style;
 
 use super::UIStateRes;
@@ -37,27 +40,41 @@ struct BindingConflict {
 
 pub struct Images {
     save: Handle<Image>,
+    cancel: Handle<Image>,
+    save_id: egui::TextureId,
+    cancel_id: egui::TextureId,
 }
+
+const BTN_SIZE: (f32, f32) = (100., 40.);
 
 impl FromWorld for Images {
     fn from_world(world: &mut World) -> Self {
         let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
         Self {
             save: asset_server.load("UI/save_and_exit.png"),
+            cancel: asset_server.load("UI/cancel.png"),
+            save_id: egui::TextureId::default(),
+            cancel_id: egui::TextureId::default(),
         }
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn controls_window(
     mut commands: Commands,
     mut egui_context: ResMut<EguiContext>,
-    windows: Res<Windows>,
+    mut windows: ResMut<Windows>,
     player_controls: Query<&InputMap<PlayerAction>>,
     mut ui_state: ResMut<UIStateRes>,
-    images: Local<Images>,
+    mut is_initialized: Local<bool>,
+    mut images: Local<Images>,
+    mut game_settings: ResMut<ReadWriteGameSettings>,
 ) {
-    let btn_size = egui::vec2(100., 40.);
-    let save_and_return_btn = egui_context.add_image(images.save.clone());
+    if !*is_initialized {
+        *is_initialized = true;
+        images.save_id = egui_context.add_image(images.save.clone_weak());
+        images.cancel_id = egui_context.add_image(images.cancel.clone_weak());
+    }
 
     let main_window = windows.get_primary().unwrap();
     let window_width_margin = egui_context.ctx_mut().style().spacing.window_margin.left * 2.0;
@@ -68,9 +85,14 @@ pub fn controls_window(
         .anchor(Align2::CENTER_CENTER, (0.0, 0.0))
         .collapsible(false)
         .resizable(false)
+        .frame(Frame {
+            fill: Color32::from_rgb(27, 51, 60),
+            ..default()
+        })
         .default_width(main_window.width() - UI_MARGIN * 2.0 - window_width_margin)
         .show(egui_context.ctx_mut(), |ui| {
             set_ui_style(ui);
+            let btn_size = egui::vec2(BTN_SIZE.0, BTN_SIZE.1);
 
             const INPUT_VARIANTS: usize = 3;
             const COLUMNS_COUNT: usize = INPUT_VARIANTS + 1;
@@ -103,12 +125,41 @@ pub fn controls_window(
                         ui.end_row();
                     }
                 });
-            let return_to_menu = ui.add(egui::ImageButton::new(save_and_return_btn, btn_size)).clicked();
 
-            if return_to_menu {
-                warn!("Should Save Settings Here");
-                ui_state.current_state = UIState::MainMenu;
-            }
+            ui.checkbox(&mut game_settings.pending_settings.use_hardware_mouse, "Use hardware mouse?");
+
+            egui::ComboBox::from_label("Display mode")
+                .selected_text(format!("{:?}", game_settings.pending_settings.window_display_mode))
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut game_settings.pending_settings.window_display_mode, WindowMode::Windowed, "Windowed");
+                    ui.selectable_value(&mut game_settings.pending_settings.window_display_mode, WindowMode::BorderlessFullscreen, "Borderless Fullscreen");
+                    ui.selectable_value(&mut game_settings.pending_settings.window_display_mode, WindowMode::SizedFullscreen, "Fullscreen (desktop)");
+                    ui.selectable_value(&mut game_settings.pending_settings.window_display_mode, WindowMode::Fullscreen, "Fullscreen (max)");
+
+                }
+            );
+
+            ui.horizontal(|ui| {
+                ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
+                let return_to_menu = ui.add(egui::ImageButton::new(images.save_id, btn_size)).clicked();
+                let cancel = ui.add(egui::ImageButton::new(images.cancel_id, btn_size)).clicked();
+                ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
+
+                if return_to_menu {
+                    warn!("Should Save Settings Here");
+                    // first save to struct
+                    game_settings.actual_settings = game_settings.pending_settings;
+                    // now modify various settings
+                    windows.get_primary_mut().unwrap().set_mode(game_settings.actual_settings.window_display_mode);
+                    ui_state.current_state = UIState::MainMenu;
+                }
+
+                if cancel {
+                    // reset settings
+                    game_settings.pending_settings = game_settings.actual_settings;
+                    ui_state.current_state = UIState::MainMenu;
+                }
+            });
 
             ui.expand_to_include_rect(ui.available_rect_before_wrap());
         });
