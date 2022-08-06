@@ -18,6 +18,7 @@ impl Plugin for GameHostPlugin {
         info!("Building Game Host Plugin");
         app.insert_resource(HostNetworkResource {});
         app.add_loopless_state(HostState::Inactive);
+        app.add_plugin(RenetServerPlugin);
         app.insert_resource(build_host_server());
         app.add_system(panic_on_error_system);
         app.add_system(renet_event_logger.run_if_resource_exists::<RenetServer>());
@@ -68,7 +69,7 @@ fn build_host_server() -> RenetServer {
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
 
-    info!("Building new RenetServer");
+    info!("Instantiating RenetServer on {}", sock2_addy.to_string());
     RenetServer::new(
         current_time,
         server_config,

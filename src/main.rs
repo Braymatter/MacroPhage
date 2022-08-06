@@ -61,7 +61,6 @@ fn main() {
         //Audio
         .add_plugin(GameAudioPlugin)
         .add_plugin(GameHostPlugin)
-        .add_plugin(RenetServerPlugin)
         .add_plugin(MacroClientPlugin);
     app.run();
 }
