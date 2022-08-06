@@ -2,11 +2,13 @@ use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
+use bevy_renet::RenetServerPlugin;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState};
 use macrophage::{
     audio::GameAudioPlugin,
     game::{controller::PlayerAction, mutationinput::mutation_input, PlayerMutationEvent},
     game::{map::spawn_map, LevelManagerRes},
+    net::{client::MacroClientPlugin, gamehost::GameHostPlugin, ConnectRequestEvent},
     ui::mousecursor_egui::MouseCursorPlugin,
     ui::UIStatePlugin,
     util::{camera::MacroCamPlugin, MacroUtils},
@@ -30,6 +32,7 @@ fn main() {
         .insert_resource(LevelManagerRes {
             current_level: None,
         })
+        .add_event::<ConnectRequestEvent>()
         .add_plugin(UIStatePlugin)
         .add_plugins(DefaultPlugins)
         //Egui (must be before inspector)
@@ -56,7 +59,10 @@ fn main() {
         .add_event::<PlayerMutationEvent>()
         .add_system(mutation_input)
         //Audio
-        .add_plugin(GameAudioPlugin);
+        .add_plugin(GameAudioPlugin)
+        .add_plugin(GameHostPlugin)
+        .add_plugin(RenetServerPlugin)
+        .add_plugin(MacroClientPlugin);
     app.run();
 }
 

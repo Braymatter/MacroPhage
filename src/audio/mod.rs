@@ -91,14 +91,14 @@ fn load_sfx(sfx: Sfx, asset_server: &AssetServer) -> Vec<Handle<AudioSource>> {
             if let Ok(path) = path {
                 //Yuck but need to remove the assets/
                 let path: String = path.path().display().to_string().chars().skip(7).collect();
-                info!("Loading sfx: {}", path);
+                debug!("Loading sfx: {}", path);
                 to_return.push(asset_server.load(&path));
             } else {
-                error!("Failed to load {:?}: {:?}", sfx_path, path);
+                warn!("Failed to load {:?}: {:?}", sfx_path, path);
             }
         }
     } else {
-        error!("Failed to read directories for {:?}", sfx_path);
+        warn!("Failed to read directories for {:?}", sfx_path);
     }
     to_return
 }
