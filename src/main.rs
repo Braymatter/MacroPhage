@@ -5,7 +5,11 @@ use bevy_mod_picking::*;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState};
 use macrophage::{
     audio::GameAudioPlugin,
-    game::{controller::PlayerAction, mutationinput::mutation_input, PlayerMutationEvent},
+    game::{
+        controller::PlayerAction,
+        mutationinput::{mutation_input, mutation_selection, MutationSelection},
+        PlayerMutationEvent,
+    },
     game::{map::spawn_map, LevelManagerRes},
     ui::mousecursor_egui::MouseCursorPlugin,
     ui::UIStatePlugin,
@@ -54,6 +58,8 @@ fn main() {
         .add_startup_system(macrophage::game::spawn_player)
         //TODO move me to where I belong, game runner is not currently added
         .add_event::<PlayerMutationEvent>()
+        .init_resource::<MutationSelection>()
+        .add_system(mutation_selection)
         .add_system(mutation_input)
         //Audio
         .add_plugin(GameAudioPlugin);

@@ -34,6 +34,16 @@ pub enum Mutation {
     },
 }
 
+//Used to insert selected resource
+impl Default for Mutation {
+    fn default() -> Self {
+        Mutation::TriggerRecombinator {
+            target: NodeId::default(),
+            cost: 0,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub enum PhageType {
     UV,
@@ -55,6 +65,7 @@ pub enum PhageType {
     PartialOrd,
     Ord,
     Debug,
+    Default,
 )]
 pub struct NodeId(u32);
 
@@ -137,7 +148,7 @@ pub struct VectorId(u32);
 pub struct Occupant(Force, PhageType);
 
 /// Defines a relationship between two cells
-#[derive(Component, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Component, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct Vector(pub NodeId, pub NodeId);
 
 impl Vector {
