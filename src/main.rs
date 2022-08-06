@@ -60,7 +60,6 @@ fn main() {
         .add_system(mutation_input)
         //Audio
         .add_plugin(GameAudioPlugin)
-        .add_plugin(GameHostPlugin)
         .add_plugin(MacroClientPlugin);
     app.run();
 }

@@ -51,17 +51,20 @@ fn build_host_server() -> RenetServer {
         .set_only_v6(false)
         .expect("Could not set only v6 in build_host_server");
 
-    let sock2_addy: SocketAddr = "[::1]:5000".parse().unwrap();
+    let sock2: SocketAddr = "[::1]:5000".parse().unwrap();
+
     socket
-        .bind(&sock2_addy.into())
+        .bind(&sock2.into())
         .expect("Could not bind server socket");
+
+    //socket.bind(&sock2_v4.into()).expect("Could not bind ipv4 localhost to socket");
 
     let connection_config = RenetConnectionConfig::default();
 
     let server_config = ServerConfig::new(
         64,
         super::PROTOCOL_ID,
-        socket.local_addr().expect("").as_socket().unwrap(),
+        sock2,
         ServerAuthentication::Unsecure,
     );
 
@@ -69,7 +72,7 @@ fn build_host_server() -> RenetServer {
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
 
-    info!("Instantiating RenetServer on {}", sock2_addy.to_string());
+    info!("Instantiating RenetServer on {}", sock2.to_string());
     RenetServer::new(
         current_time,
         server_config,
@@ -84,11 +87,11 @@ fn renet_event_logger(mut server: ResMut<RenetServer>, mut server_evs: EventRead
         match event {
             ServerEvent::ClientConnected(id, _userdata) => {
                 info!("Client Connected! Assigned id: {}", id);
-                server.send_message(
-                    *id,
-                    ServerChannel::ServerMessages.id(),
-                    bincode::serialize(&ServerCommand::RequestProfile).unwrap(),
-                );
+                // server.send_message(
+                //     *id,
+                //     ServerChannel::ServerMessages.id(),
+                //     bincode::serialize(&ServerCommand::RequestProfile).unwrap(),
+                // );
             }
             ServerEvent::ClientDisconnected(id) => {
                 warn!("Client Disconnected: {}", id);

@@ -29,7 +29,7 @@ pub struct MacroClientState {
 }
 
 fn new_renet_client(target: SocketAddr) -> RenetClient {
-    let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
+    let socket = UdpSocket::bind("[::1]:5001").unwrap();
     let connection_config = client_connection_config();
     let current_time = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -76,7 +76,8 @@ fn connect_to_client(
     let ev = conn_reqs.iter().last().unwrap();
     client.host = Some(ev.socket);
 
-    cmds.insert_resource(new_renet_client);
+    info!("Inserting Renet Client resource!");
+    cmds.insert_resource(new_renet_client(ev.socket));
 }
 
 fn receive_message(mut client: ResMut<RenetClient>) {
