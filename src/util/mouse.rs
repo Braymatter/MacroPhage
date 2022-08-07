@@ -1,7 +1,4 @@
-use bevy::{
-    prelude::*,
-    render::camera::{Camera3d, RenderTarget},
-};
+use bevy::{prelude::*, render::camera::RenderTarget};
 
 pub struct MousePlugin;
 
@@ -25,7 +22,7 @@ fn mouse_position(
     wnds: Res<Windows>,
     mut mouse_position: ResMut<MousePosition>,
     // query to get camera transform
-    q_camera: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
+    q_camera: Query<(&Camera, &GlobalTransform)>,
 ) {
     // get the camera info and transform
     // assuming there is exactly one main camera entity, so query::single() is OK
@@ -37,25 +34,25 @@ fn mouse_position(
         };
 
         // get the window that the camera is displaying to
-        let wnd = wnds.get(window_id).unwrap();
+        if let Some(wnd) = wnds.get(window_id) {
+            // check if the cursor is inside the window and get its position
+            if let Some(screen_pos) = wnd.cursor_position() {
+                // get the size of the window
+                let window_size = Vec2::new(wnd.width() as f32, wnd.height() as f32);
 
-        // check if the cursor is inside the window and get its position
-        if let Some(screen_pos) = wnd.cursor_position() {
-            // get the size of the window
-            let window_size = Vec2::new(wnd.width() as f32, wnd.height() as f32);
+                // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
+                let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
 
-            // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
-            let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
+                // matrix for undoing the projection and camera transform
+                let ndc_to_world =
+                    camera_transform.compute_matrix() * camera.projection_matrix().inverse();
 
-            // matrix for undoing the projection and camera transform
-            let ndc_to_world =
-                camera_transform.compute_matrix() * camera.projection_matrix.inverse();
+                // use it to convert ndc to world-space coordinates
+                let world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
 
-            // use it to convert ndc to world-space coordinates
-            let world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
-
-            mouse_position.ndc = ndc;
-            mouse_position.world = world_pos;
+                mouse_position.ndc = ndc;
+                mouse_position.world = world_pos;
+            }
         }
     }
 }

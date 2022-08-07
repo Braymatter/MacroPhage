@@ -1,5 +1,4 @@
-use bevy::ecs::system::QuerySingleError;
-use bevy::{input::mouse::MouseWheel, prelude::*};
+use bevy::{ecs::query::QuerySingleError, input::mouse::MouseWheel, prelude::*};
 use bevy_mod_picking::PickingCameraBundle;
 use leafwing_input_manager::prelude::ActionState;
 
@@ -58,7 +57,7 @@ impl Default for CameraState {
 pub struct PlayerCamMarker;
 pub fn spawn_camera(mut commands: Commands) {
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
+        .spawn_bundle(Camera3dBundle {
             transform: Transform::from_xyz(0.0, 15.0, 0.0).looking_at(Vec3::ZERO, -Vec3::X),
             ..default()
         })

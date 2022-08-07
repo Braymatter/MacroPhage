@@ -1,10 +1,10 @@
 use crate::game::controller::PlayerAction;
-use bevy::ecs::system::QuerySingleError;
+use bevy::ecs::query::QuerySingleError;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
 use directories::ProjectDirs;
 use leafwing_input_manager::prelude::InputMap;
-use leafwing_input_manager::user_input::InputButton;
+use leafwing_input_manager::user_input::InputKind;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs;
@@ -160,5 +160,5 @@ impl ActiveBinding {
 #[derive(Copy, Clone)]
 pub struct BindingConflict {
     pub action: PlayerAction,
-    pub input_button: InputButton,
+    pub input_button: InputKind,
 }

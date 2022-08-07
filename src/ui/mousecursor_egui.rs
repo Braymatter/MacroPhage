@@ -1,6 +1,6 @@
 use crate::game::settings::ReadWriteGameSettings;
 use bevy::prelude::*;
-use bevy::render::camera::CameraTypePlugin;
+//use bevy::render::camera::CameraTypePlugin;
 use bevy_egui::{egui, EguiContext};
 
 pub struct MouseCursorPlugin {}
@@ -33,7 +33,7 @@ pub const MOUSE_OFFSET: (f32, f32) = (0., 0.);
 /// This uses direct egui rendering due to its complexity
 impl Plugin for MouseCursorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(CameraTypePlugin::<Mouse2dCamera>::default())
+        app //.add_plugin(CameraTypePlugin::<Mouse2dCamera>::default())
             .add_system(move_cursor);
     }
 }

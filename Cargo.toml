@@ -17,7 +17,7 @@ opt-level = 3
 opt-level = 3
 
 [dependencies]
-bevy = {version = "0.7", features = [
+bevy = {version = "0.8", features = [
     "bevy_gilrs",
     "bevy_winit",
     "render",
@@ -30,22 +30,22 @@ bevy = {version = "0.7", features = [
     "filesystem_watcher",
     "trace"
     ] } ## RUN WITH NIGHTLY FEATURE FOR FASTER LINKING
-bevy-inspector-egui = "0.11"
-bevy_asset_loader = {version = "0.11", features = ["progress_tracking"] }
-iyes_progress = "0.3"
-bevy_kira_audio = { version = "0.10", features = ["ogg", "mp3", "wav"] }
-bevy_egui = "0.14"
+bevy-inspector-egui = "0.12.1"
+bevy_asset_loader = {version = "0.12", features = ["progress_tracking"] }
+iyes_progress = "0.4"
+bevy_kira_audio = { version = "0.11", features = ["ogg", "mp3", "wav"] }
+bevy_egui = "0.15"
 strum = "0.24"
 strum_macros = "0.24"
 rand = "*"
-bevy_mod_picking = "0.7"
-leafwing-input-manager = "0.4.1"
+bevy_mod_picking = "0.8"
+leafwing-input-manager = "0.5.1"
 derive_more = "*"
-bevy_punchthrough = {git="https://github.com/braymatter/bevy_punchthrough", branch="master"}
+# bevy_punchthrough = {git="https://github.com/braymatter/bevy_punchthrough", branch="master"}
 serde = "1.0.140"
 serde_json = "1.0.82"
 bevy_flycam = "*"
 dns-lookup = "1.0.8"
-iyes_loopless = "0.6"
-bevy_mod_debugdump = "0.4.0"
 directories = "4.0.1"
+iyes_loopless = "0.7"
+bevy_mod_debugdump = "0.5.0"

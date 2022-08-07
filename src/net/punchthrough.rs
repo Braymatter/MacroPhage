@@ -2,8 +2,8 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
 
 use bevy::prelude::*;
-use bevy_punchthrough::client::{PunchthroughClientPlugin, PunchthroughEvent, RequestSwap};
-use bevy_punchthrough::renet_plugin::renet::RenetError;
+//use bevy_punchthrough::client::{PunchthroughClientPlugin, PunchthroughEvent, RequestSwap};
+//use bevy_punchthrough::renet_plugin::renet::RenetError;
 use dns_lookup::lookup_host;
 use leafwing_input_manager::prelude::ActionState;
 
@@ -13,13 +13,14 @@ pub struct PunchthroughPlugin;
 
 impl Plugin for PunchthroughPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(renet_test_controls);
-        app.add_system(panic_on_error_system);
+        //app.add_system(renet_test_controls);
+        //app.add_system(panic_on_error_system);
 
-        build_punchthrough_plugin(app);
+        //build_punchthrough_plugin(app);
     }
 }
 
+/*
 pub fn monitor_punchthrough_events(mut pt_events: EventReader<PunchthroughEvent>) {
     for ev in pt_events.iter() {
         info!("Received PT Event {ev:#?}");
@@ -83,3 +84,5 @@ fn build_punchthrough_plugin(app: &mut App) {
         punchthrough_server: SocketAddr::new(pt_server_ip, 5000),
     });
 }
+
+*/

@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use bevy::ecs::system::QuerySingleError;
+use bevy::ecs::query::QuerySingleError;
 use bevy::{prelude::*, utils::HashMap};
 use bevy_kira_audio::{AudioSource, *};
 use leafwing_input_manager::prelude::ActionState;
