@@ -1,4 +1,4 @@
-use crate::net::{RequestProfileCmd, ServerChannel};
+use crate::net::{RequestProfileCmd, ServerChannel, ClientChannel};
 use bevy::prelude::*;
 use bevy_renet::{
     renet::{
@@ -59,7 +59,11 @@ fn build_host_server() -> RenetServer {
 
     //socket.bind(&sock2_v4.into()).expect("Could not bind ipv4 localhost to socket");
 
-    let connection_config = RenetConnectionConfig::default();
+    let connection_config = RenetConnectionConfig {
+        send_channels_config: ServerChannel::channels_config(),
+        receive_channels_config: ClientChannel::channels_config(),
+        ..Default::default()
+    };
 
     let server_config = ServerConfig::new(
         64,
@@ -88,11 +92,11 @@ fn renet_event_logger(mut server: ResMut<RenetServer>, mut server_evs: EventRead
             ServerEvent::ClientConnected(id, _userdata) => {
                 info!("Client Connected! Assigned id: {}", id);
 
-                //let message = serde_json::to_vec(&RequestProfileCmd { id: *id }).unwrap();
+                let message = serde_json::to_vec(&RequestProfileCmd { id: *id }).unwrap();
                 server.send_message(
                     *id,
                     ServerChannel::ServerMessages.id(),
-                    vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    message,
                 );
             }
             ServerEvent::ClientDisconnected(id) => {

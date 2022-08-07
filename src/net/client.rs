@@ -83,14 +83,14 @@ fn connect_to_client(
 
 fn receive_message(mut client: ResMut<RenetClient>) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages.id()) {
-        println!("Some Message: {message:#?}")
-        // match serde_json::from_slice::<RequestProfileCmd>(&message) {
-        //     Ok(msg) => {
-        //         info!("Received {msg:#?}");
-        //     }
-        //     Err(e) => {
-        //         error!("{}", e);
-        //     }
-        // }
+        
+        match serde_json::from_slice::<RequestProfileCmd>(&message) {
+            Ok(msg) => {
+                info!("Received {msg:#?}");
+            }
+            Err(e) => {
+                error!("{}", e);
+            }
+        }
     }
 }
