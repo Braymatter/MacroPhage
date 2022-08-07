@@ -112,8 +112,17 @@ pub fn spawn_map(
         vector_ents.push(
             commands
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
-                    material: materials.add(Color::rgb(0.8, 0.1, 0.1).into()),
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.25,
+                        subdivisions: 10,
+                    })),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::rgba(0.8, 0.1, 0.1, 0.8),
+                        //emissive appears to do nothing
+                        //emissive: Color::rgb(0.1, 0.1, 0.1),
+                        alpha_mode: AlphaMode::Blend,
+                        ..default()
+                    }),
                     transform,
                     ..default()
                 })
