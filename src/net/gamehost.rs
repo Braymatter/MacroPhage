@@ -1,3 +1,4 @@
+use crate::net::{RequestProfileCmd, ServerChannel};
 use bevy::prelude::*;
 use bevy_renet::{
     renet::{
@@ -6,11 +7,10 @@ use bevy_renet::{
     },
     RenetServerPlugin,
 };
+use bincode::Options;
 use iyes_loopless::prelude::*;
 use socket2::{Domain, Protocol, Socket, Type};
 use std::{net::SocketAddr, time::SystemTime};
-
-use crate::net::{ServerChannel, ServerCommand};
 
 pub struct GameHostPlugin;
 impl Plugin for GameHostPlugin {
@@ -87,11 +87,13 @@ fn renet_event_logger(mut server: ResMut<RenetServer>, mut server_evs: EventRead
         match event {
             ServerEvent::ClientConnected(id, _userdata) => {
                 info!("Client Connected! Assigned id: {}", id);
-                // server.send_message(
-                //     *id,
-                //     ServerChannel::ServerMessages.id(),
-                //     bincode::serialize(&ServerCommand::RequestProfile).unwrap(),
-                // );
+
+                //let message = serde_json::to_vec(&RequestProfileCmd { id: *id }).unwrap();
+                server.send_message(
+                    *id,
+                    ServerChannel::ServerMessages.id(),
+                    vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                );
             }
             ServerEvent::ClientDisconnected(id) => {
                 warn!("Client Disconnected: {}", id);

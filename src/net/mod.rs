@@ -1,5 +1,6 @@
 use std::{net::SocketAddr, time::Duration};
 
+use bevy::prelude::Component;
 use bevy_renet::renet::{ChannelConfig, ReliableChannelConfig};
 use serde::{Deserialize, Serialize};
 
@@ -72,7 +73,7 @@ impl ServerChannel {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-enum ServerCommand {
-    RequestProfile,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RequestProfileCmd {
+    id: u64,
 }

@@ -8,9 +8,10 @@ use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
     RenetClientPlugin,
 };
+use bincode::Options;
 use iyes_loopless::prelude::*;
 
-use super::{ClientChannel, ConnectRequestEvent, ServerChannel, ServerCommand, PROTOCOL_ID};
+use super::{ClientChannel, ConnectRequestEvent, RequestProfileCmd, ServerChannel, PROTOCOL_ID};
 
 pub struct MacroClientPlugin;
 impl Plugin for MacroClientPlugin {
@@ -82,13 +83,14 @@ fn connect_to_client(
 
 fn receive_message(mut client: ResMut<RenetClient>) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages.id()) {
-        match bincode::deserialize::<ServerCommand>(&message) {
-            Ok(msg) => {
-                info!("Received {msg:#?}");
-            }
-            Err(e) => {
-                error!("{}", e);
-            }
-        }
+        println!("Some Message: {message:#?}")
+        // match serde_json::from_slice::<RequestProfileCmd>(&message) {
+        //     Ok(msg) => {
+        //         info!("Received {msg:#?}");
+        //     }
+        //     Err(e) => {
+        //         error!("{}", e);
+        //     }
+        // }
     }
 }
