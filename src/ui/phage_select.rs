@@ -100,8 +100,7 @@ fn setup(
 
     commands.spawn_bundle(Camera3dBundle {
         camera_3d: Camera3d {
-            //clear_color: ClearColorConfig::Custom(Color::rgba(0., 0., 0., 0.)),
-            clear_color: ClearColorConfig::Default,
+            clear_color: ClearColorConfig::Custom(Color::rgba(0., 0., 0., 0.)),
             ..default()
         },
         camera: Camera {
