@@ -1,4 +1,4 @@
-use bevy_egui::egui::{Color32, Ui, Stroke, Rounding};
+use bevy_egui::egui::{Color32, Rounding, Stroke, Ui};
 
 pub fn set_ui_style(ui: &mut Ui) {
     ui.visuals_mut().widgets.inactive.expansion = 0.;

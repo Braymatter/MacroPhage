@@ -1,18 +1,18 @@
-use bevy::{prelude::*, window::PresentMode};
 use bevy::ecs::system::QuerySingleError;
+use bevy::{prelude::*, window::PresentMode};
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_mod_picking::*;
 use leafwing_input_manager::{plugin::InputManagerPlugin, prelude::ActionState};
+use macrophage::game::settings::{ReadWriteGameSettings, SettingsPlugin};
 use macrophage::{
     audio::GameAudioPlugin,
     game::controller::PlayerAction,
     game::{map::spawn_map, LevelManagerRes},
-    ui::UIStatePlugin,
     ui::mousecursor_egui::MouseCursorPlugin,
+    ui::UIStatePlugin,
     util::{camera::MacroCamPlugin, MacroUtils},
 };
-use macrophage::game::settings::{ReadWriteGameSettings, SettingsPlugin};
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;

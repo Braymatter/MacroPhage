@@ -1,7 +1,7 @@
-use bevy::{app::AppExit, prelude::*};
-use bevy_egui::{egui, EguiContext};
-use bevy_egui::egui::{Color32, Frame};
 use crate::util::ui::set_ui_style;
+use bevy::{app::AppExit, prelude::*};
+use bevy_egui::egui::{Color32, Frame};
+use bevy_egui::{egui, EguiContext};
 
 use super::{UIState, UIStateRes};
 
@@ -47,7 +47,6 @@ pub fn main_menu(
         images.join_id = egui_context.add_image(images.join.clone_weak());
         images.settings_id = egui_context.add_image(images.settings.clone_weak());
         images.exit_id = egui_context.add_image(images.exit.clone_weak());
-
     }
     egui::Window::new("Main Menu")
         .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, -50.0))
@@ -62,12 +61,20 @@ pub fn main_menu(
             set_ui_style(ui);
             let btn_size = egui::vec2(BTN_SIZE.0, BTN_SIZE.1);
 
-            ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
-            let play = ui.add(egui::ImageButton::new(images.play_id, btn_size)).clicked();
-            let join = ui.add(egui::ImageButton::new(images.join_id, btn_size)).clicked();
-            let settings = ui.add(egui::ImageButton::new(images.settings_id, btn_size)).clicked();
-            let exit = ui.add(egui::ImageButton::new(images.exit_id, btn_size)).clicked();
-            ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
+            ui.visuals_mut().widgets.inactive.expansion = -5.; // bug with egui imagebutton padding
+            let play = ui
+                .add(egui::ImageButton::new(images.play_id, btn_size))
+                .clicked();
+            let join = ui
+                .add(egui::ImageButton::new(images.join_id, btn_size))
+                .clicked();
+            let settings = ui
+                .add(egui::ImageButton::new(images.settings_id, btn_size))
+                .clicked();
+            let exit = ui
+                .add(egui::ImageButton::new(images.exit_id, btn_size))
+                .clicked();
+            ui.visuals_mut().widgets.inactive.expansion = 0.; // end bug fix
 
             if play {
                 ui_state.current_state = UIState::Lobby;

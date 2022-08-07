@@ -1,7 +1,7 @@
+use crate::game::settings::ReadWriteGameSettings;
 use bevy::prelude::*;
 use bevy::render::camera::CameraTypePlugin;
 use bevy_egui::{egui, EguiContext};
-use crate::game::settings::ReadWriteGameSettings;
 
 pub struct MouseCursorPlugin {}
 
@@ -33,8 +33,7 @@ pub const MOUSE_OFFSET: (f32, f32) = (0., 0.);
 /// This uses direct egui rendering due to its complexity
 impl Plugin for MouseCursorPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_plugin(CameraTypePlugin::<Mouse2dCamera>::default())
+        app.add_plugin(CameraTypePlugin::<Mouse2dCamera>::default())
             .add_system(move_cursor);
     }
 }
@@ -47,14 +46,17 @@ fn move_cursor(
     game_settings: Res<ReadWriteGameSettings>,
 ) {
     if !game_settings.actual_settings.use_hardware_mouse {
-        let img =  if buttons.any_pressed([MouseButton::Left, MouseButton::Right]) {
+        let img = if buttons.any_pressed([MouseButton::Left, MouseButton::Right]) {
             egui_context.add_image(mouse.clicked.clone())
         } else {
             egui_context.add_image(mouse.normal.clone())
         };
 
         let ctx = egui_context.ctx_mut();
-        let position = ctx.input().pointer.hover_pos()
+        let position = ctx
+            .input()
+            .pointer
+            .hover_pos()
             .map(|coord| coord + egui::vec2(MOUSE_OFFSET.0, MOUSE_OFFSET.1));
 
         egui::Area::new("cursor")
@@ -62,7 +64,10 @@ fn move_cursor(
             .order(egui::Order::Tooltip)
             .interactable(false)
             .show(ctx, |ui| {
-                ui.add(egui::Image::new(img, egui::vec2(MOUSE_SIZE.0, MOUSE_SIZE.1)))
+                ui.add(egui::Image::new(
+                    img,
+                    egui::vec2(MOUSE_SIZE.0, MOUSE_SIZE.1),
+                ))
             });
     }
 

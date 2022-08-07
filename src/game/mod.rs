@@ -1,10 +1,10 @@
 use crate::util::ColorPalette;
 
 use self::controller::PlayerAction;
+use crate::game::settings::ReadWriteGameSettings;
 use bevy::{prelude::*, utils::HashMap};
 use leafwing_input_manager::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::game::settings::ReadWriteGameSettings;
 
 pub mod controller;
 pub mod gamerunner;
@@ -351,5 +351,3 @@ pub fn spawn_player(
             .insert(Name::new("Player"));
     }
 }
-
-

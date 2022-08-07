@@ -1,15 +1,15 @@
-use std::fs;
-use std::fs::File;
-use std::io::Read;
+use crate::game::controller::PlayerAction;
 use bevy::ecs::system::QuerySingleError;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
 use directories::ProjectDirs;
 use leafwing_input_manager::prelude::InputMap;
 use leafwing_input_manager::user_input::InputButton;
-use serde::Serialize;
 use serde::Deserialize;
-use crate::game::controller::PlayerAction;
+use serde::Serialize;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
 
 /// There are two kinds of settings in the game, the settings actually
 /// applied to the game and ones that are pending to be applied. This is necessary
@@ -28,7 +28,7 @@ pub struct GameSettings {
     #[serde(with = "WindowModeDef")]
     pub window_display_mode: WindowMode,
 
-    pub inputs: InputMap<PlayerAction>
+    pub inputs: InputMap<PlayerAction>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -64,7 +64,7 @@ impl Default for GameSettings {
                 (KeyCode::Right, PlayerAction::PanRight),
                 (KeyCode::Up, PlayerAction::PanUp),
                 (KeyCode::Down, PlayerAction::PanDown),
-            ])
+            ]),
         }
     }
 }
@@ -72,36 +72,43 @@ impl Default for GameSettings {
 pub struct SettingsPlugin;
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_startup_system(load_settings)
+        app.add_startup_system(load_settings)
             .add_system(changed_settings);
     }
 }
 
-fn load_settings(
-    mut command: Commands
-) {
+fn load_settings(mut command: Commands) {
     // deserialize the file we have
     if let Some(project_dirs) = ProjectDirs::from("", "", "macrophage") {
         let path = project_dirs.config_dir();
-        fs::create_dir_all(path).unwrap_or_else(|_| eprintln!("Error creating directories on config path {}.", path.display()));
+        fs::create_dir_all(path).unwrap_or_else(|_| {
+            eprintln!(
+                "Error creating directories on config path {}.",
+                path.display()
+            )
+        });
         let file = File::open(path.join("settings.json"));
         match file {
             Ok(mut file) => {
                 let mut buffer = String::new();
                 let read_bytes = file.read_to_string(&mut buffer).unwrap_or(0);
                 if read_bytes > 0 {
-                    let settings: GameSettings = serde_json::from_str(&buffer).unwrap_or(GameSettings { ..default() });
-                    command.insert_resource(ReadWriteGameSettings { actual_settings: settings.clone(), pending_settings: settings.clone() });
+                    let settings: GameSettings =
+                        serde_json::from_str(&buffer).unwrap_or(GameSettings { ..default() });
+                    command.insert_resource(ReadWriteGameSettings {
+                        actual_settings: settings.clone(),
+                        pending_settings: settings.clone(),
+                    });
 
-                    println!("Successfully loaded settings from settings.json: {}", buffer);
+                    println!(
+                        "Successfully loaded settings from settings.json: {}",
+                        buffer
+                    );
                 }
-            },
+            }
             Err(_) => println!("Couldn't access settings.json file; it may not exist yet."),
         };
-
     }
-
 }
 
 fn changed_settings(

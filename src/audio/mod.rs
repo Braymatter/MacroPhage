@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf};
 
-use bevy::{prelude::*, utils::HashMap};
 use bevy::ecs::system::QuerySingleError;
+use bevy::{prelude::*, utils::HashMap};
 use bevy_kira_audio::{AudioSource, *};
 use leafwing_input_manager::prelude::ActionState;
 use rand::seq::SliceRandom;
@@ -123,10 +123,7 @@ fn play_bgm(asset_server: Res<AssetServer>, bgm: Res<AudioChannel<BgmChannel>>) 
     bgm.play_looped(asset_server.load(bgm_path));
 }
 
-fn change_volume(
-    bgm: Res<AudioChannel<BgmChannel>>,
-    game_settings: ResMut<ReadWriteGameSettings>,
-) {
+fn change_volume(bgm: Res<AudioChannel<BgmChannel>>, game_settings: ResMut<ReadWriteGameSettings>) {
     if game_settings.is_changed() {
         if game_settings.actual_settings.music_enabled {
             bgm.set_volume(1.0);

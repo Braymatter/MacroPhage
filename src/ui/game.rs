@@ -1,16 +1,13 @@
-use bevy_egui::{
-    egui::{Align2},
-    EguiContext,
-};
+use bevy_egui::{egui::Align2, EguiContext};
 
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
+use crate::util::ui::{set_ui_style, set_ui_style_none};
 use crate::{
     game::LevelManagerRes,
     util::camera::{CameraState, PlayerCamMarker},
 };
-use crate::util::ui::{set_ui_style, set_ui_style_none};
 
 use super::{UIState, UIStateRes};
 
@@ -77,9 +74,12 @@ pub fn game_hud(
         .interactable(true)
         .show(ctx, |ui| {
             set_ui_style(ui);
-            ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
-            let return_to_menu = ui.add(egui::ImageButton::new(images.main_menu_id, egui::vec2(100., 40.)));
-            ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
+            ui.visuals_mut().widgets.inactive.expansion = -5.; // bug with egui imagebutton padding
+            let return_to_menu = ui.add(egui::ImageButton::new(
+                images.main_menu_id,
+                egui::vec2(100., 40.),
+            ));
+            ui.visuals_mut().widgets.inactive.expansion = 0.; // end bug fix
 
             // TODO: verify leaving the game or hide this until escape is pressed
             if return_to_menu.clicked() {
@@ -109,7 +109,10 @@ pub fn game_hud(
             set_ui_style_none(ui);
             // TODO: hexes dont click well when overlapping
             // TODO: fork button to support hexagonal click area OR subset a small invisible button within.
-            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(83., 103.)));
+            let btn = ui.add(egui::ImageButton::new(
+                images.hex_button_id,
+                egui::vec2(83., 103.),
+            ));
             if btn.clicked() {
                 println!("Ability 1 used");
             }
@@ -123,7 +126,10 @@ pub fn game_hud(
             set_ui_style_none(ui);
             // TODO: hexes dont click well when overlapping
             // TODO: fork button to support hexagonal click area OR subset a small invisible button within.
-            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(83., 103.)));
+            let btn = ui.add(egui::ImageButton::new(
+                images.hex_button_id,
+                egui::vec2(83., 103.),
+            ));
             if btn.clicked() {
                 println!("Ability 2 used");
             }
@@ -137,7 +143,10 @@ pub fn game_hud(
             set_ui_style_none(ui);
             // TODO: hexes dont click well when overlapping
             // TODO: fork button to support hexagonal click area OR subset a small invisible button within.
-            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(83., 103.)));
+            let btn = ui.add(egui::ImageButton::new(
+                images.hex_button_id,
+                egui::vec2(83., 103.),
+            ));
             if btn.clicked() {
                 println!("Ability 3 used");
             }
