@@ -51,3 +51,5 @@ iyes_loopless = "0.7"
 bevy_mod_debugdump = "0.5.0"
 bevy_renet="0.0.5"
 socket2 = "0.4.4"
+public-ip = "0.2"
+tokio={version="1.20.1", features=["macros"]}
