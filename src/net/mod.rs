@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, time::Duration};
+use std::{net::{SocketAddr, IpAddr}, time::Duration};
 
 use bevy::prelude::Component;
 use bevy_renet::renet::{ChannelConfig, ReliableChannelConfig};
@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 pub mod client;
 pub mod gamehost;
 const PROTOCOL_ID: u64 = 7;
-
+pub struct IpRes{
+    pub public_ip: IpAddr
+}
 pub struct ConnectRequestEvent {
     pub socket: SocketAddr,
 }

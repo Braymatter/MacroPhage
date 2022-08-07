@@ -2,11 +2,9 @@ use std::net::IpAddr;
 
 use bevy::{log::LogPlugin, prelude::*};
 use bevy_renet::RenetServerPlugin;
-use macrophage::net::gamehost::GameHostPlugin;
+use macrophage::net::{gamehost::GameHostPlugin, IpRes};
 
-pub struct IpRes{
-    pub public_ip: IpAddr
-}
+
 
 #[tokio::main]
 async fn main() {

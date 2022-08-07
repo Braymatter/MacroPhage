@@ -10,7 +10,9 @@ use bevy_renet::{
 use bincode::Options;
 use iyes_loopless::prelude::*;
 use socket2::{Domain, Protocol, Socket, Type};
-use std::{net::SocketAddr, time::SystemTime};
+use std::{net::{SocketAddr, IpAddr}, time::SystemTime};
+
+use super::IpRes;
 
 pub struct GameHostPlugin;
 impl Plugin for GameHostPlugin {
@@ -19,7 +21,7 @@ impl Plugin for GameHostPlugin {
         app.insert_resource(HostNetworkResource {});
         app.add_loopless_state(HostState::Inactive);
         app.add_plugin(RenetServerPlugin);
-        app.insert_resource(build_host_server());
+        app.add_startup_system(build_host_server);
         app.add_system(panic_on_error_system);
         app.add_system(renet_event_logger.run_if_resource_exists::<RenetServer>());
     }
@@ -45,7 +47,7 @@ fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     }
 }
 
-fn build_host_server() -> RenetServer {
+fn build_host_server(ip_res: Res<IpRes>, mut commands: Commands) {
     let socket = Socket::new(Domain::IPV6, Type::DGRAM, Some(Protocol::UDP)).unwrap();
     socket
         .set_only_v6(false)
@@ -57,8 +59,6 @@ fn build_host_server() -> RenetServer {
         .bind(&sock2.into())
         .expect("Could not bind server socket");
 
-    //socket.bind(&sock2_v4.into()).expect("Could not bind ipv4 localhost to socket");
-
     let connection_config = RenetConnectionConfig {
         send_channels_config: ServerChannel::channels_config(),
         receive_channels_config: ClientChannel::channels_config(),
@@ -68,7 +68,7 @@ fn build_host_server() -> RenetServer {
     let server_config = ServerConfig::new(
         64,
         super::PROTOCOL_ID,
-        sock2,
+        SocketAddr::new(ip_res.public_ip, 5000),
         ServerAuthentication::Unsecure,
     );
 
@@ -77,13 +77,15 @@ fn build_host_server() -> RenetServer {
         .unwrap();
 
     info!("Instantiating RenetServer on {}", sock2.to_string());
-    RenetServer::new(
+    let res = RenetServer::new(
         current_time,
         server_config,
         connection_config,
         socket.into(),
     )
-    .unwrap()
+    .unwrap();
+
+    commands.insert_resource(res);
 }
 
 fn renet_event_logger(mut server: ResMut<RenetServer>, mut server_evs: EventReader<ServerEvent>) {
