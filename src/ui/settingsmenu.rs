@@ -1,20 +1,25 @@
-use std::fs::{create_dir_all, File};
-use std::io::{Write};
+use bevy::window::WindowMode;
 use bevy::{
     ecs::system::SystemParam,
-    input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ElementState},
+    input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
     prelude::*,
 };
-use bevy::window::WindowMode;
-use bevy_egui::{egui::{Align2, Grid, Window}, egui, EguiContext};
-use bevy_egui::egui::{Color32, Frame, RichText, Stroke};
 use bevy_egui::egui::style::Margin;
+use bevy_egui::egui::{Color32, Frame, RichText, Stroke};
+use bevy_egui::{
+    egui,
+    egui::{Align2, Grid, Window},
+    EguiContext,
+};
 use directories::ProjectDirs;
-use leafwing_input_manager::{prelude::*, user_input::InputButton};
+use leafwing_input_manager::{prelude::*, user_input::InputKind};
+use std::fs::{create_dir_all, File};
+use std::io::Write;
 
 use crate::{game::controller::PlayerAction, ui::UIState};
 use crate::game::settings::{ActiveBinding, BindingConflict, ReadWriteGameSettings};
 use crate::util::ui::set_ui_style;
+
 
 use super::UIStateRes;
 
@@ -64,6 +69,11 @@ impl FromWorld for TinyImages {
         }
     }
 }
+
+//struct BindingConflict {
+//action: PlayerAction,
+//input_button: InputKind,
+//}
 
 #[allow(clippy::too_many_arguments)]
 pub fn controls_window(
@@ -115,13 +125,15 @@ pub fn controls_window(
                         let inputs = controls.get(action);
                         for index in 0..INPUT_VARIANTS {
                             let button_text = match inputs.get_at(index) {
-                                Some(UserInput::Single(InputButton::Gamepad(gamepad_button))) => {
+                                Some(UserInput::Single(InputKind::GamepadButton(
+                                    gamepad_button,
+                                ))) => {
                                     format!("🎮 {:?}", gamepad_button)
                                 }
-                                Some(UserInput::Single(InputButton::Keyboard(keycode))) => {
+                                Some(UserInput::Single(InputKind::Keyboard(keycode))) => {
                                     format!("🖮 {:?}", keycode)
                                 }
-                                Some(UserInput::Single(InputButton::Mouse(mouse_button))) => {
+                                Some(UserInput::Single(InputKind::Mouse(mouse_button))) => {
                                     format!("🖱 {:?}", mouse_button)
                                 }
                                 _ => "Empty".to_string(),
@@ -231,13 +243,16 @@ pub fn binding_window_system(
                     conflict.input_button, conflict.action
                 ));
                 ui.horizontal(|ui| {
-                    ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
+                    ui.visuals_mut().widgets.inactive.expansion = -5.; // bug with egui imagebutton padding
                     let replace = ui.add(egui::ImageButton::new(images.tiny_replace_id, btn_size));
                     let cancel = ui.add(egui::ImageButton::new(images.tiny_cancel_id, btn_size));
-                    ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
+                    ui.visuals_mut().widgets.inactive.expansion = 0.; // end bug fix
 
                     if replace.clicked() {
-                        game_settings.pending_settings.inputs.remove(conflict.action, conflict.input_button);
+                        game_settings
+                            .pending_settings
+                            .inputs
+                            .remove(conflict.action, conflict.input_button);
                         game_settings.pending_settings.inputs.insert_at(
                             conflict.input_button,
                             active_binding.action,
@@ -252,13 +267,16 @@ pub fn binding_window_system(
             } else {
                 ui.label("Press any key now");
                 if let Some(input_button) = input_events.input_button() {
-                    let conflict_action = game_settings.pending_settings.inputs.iter().find_map(|(inputs, action)| {
-                        if action != active_binding.action && inputs.contains(&input_button.into())
-                        {
-                            return Some(action);
-                        }
-                        None
-                    });
+                    let conflict_action = game_settings.pending_settings.inputs.iter().find_map(
+                        |(inputs, action)| {
+                            if action != active_binding.action
+                                && inputs.contains(&input_button.into())
+                            {
+                                return Some(action);
+                            }
+                            None
+                        },
+                    );
                     if let Some(action) = conflict_action {
                         active_binding.conflict.replace(BindingConflict {
                             action,
@@ -285,9 +303,9 @@ pub struct InputEvents<'w, 's> {
 }
 
 impl InputEvents<'_, '_> {
-    fn input_button(&mut self) -> Option<InputButton> {
+    fn input_button(&mut self) -> Option<InputKind> {
         if let Some(keyboard_input) = self.keys.iter().next() {
-            if keyboard_input.state == ElementState::Released {
+            if keyboard_input.state == ButtonState::Released {
                 if let Some(key_code) = keyboard_input.key_code {
                     return Some(key_code.into());
                 }
@@ -295,18 +313,18 @@ impl InputEvents<'_, '_> {
         }
 
         if let Some(mouse_input) = self.mouse_buttons.iter().next() {
-            if mouse_input.state == ElementState::Released {
+            if mouse_input.state == ButtonState::Released {
                 return Some(mouse_input.button.into());
             }
         }
 
-        if let Some(GamepadEvent(_, event_type)) = self.gamepad_events.iter().next() {
-            if let GamepadEventType::ButtonChanged(button, strength) = event_type.to_owned() {
-                if strength <= 0.5 {
-                    return Some(button.into());
-                }
-            }
-        }
+        //if let Some(GamepadEvent(_, event_type)) = self.gamepad_events.iter().next() {
+        //if let GamepadEventType::ButtonChanged(button, strength) = event_type.to_owned() {
+        //if strength <= 0.5 {
+        //return Some(button.into());
+        //}
+        //}
+        //}
 
         None
     }

@@ -1,15 +1,15 @@
-use std::fs;
-use std::fs::File;
-use std::io::Read;
-use bevy::ecs::system::QuerySingleError;
+use crate::game::controller::PlayerAction;
+use bevy::ecs::query::QuerySingleError;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
 use directories::ProjectDirs;
 use leafwing_input_manager::prelude::InputMap;
-use leafwing_input_manager::user_input::InputButton;
-use serde::Serialize;
+use leafwing_input_manager::user_input::InputKind;
 use serde::Deserialize;
-use crate::game::controller::PlayerAction;
+use serde::Serialize;
+use std::fs;
+use std::fs::File;
+use std::io::Read;
 
 /// There are two kinds of settings in the game, the settings actually
 /// applied to the game and ones that are pending to be applied. This is necessary
@@ -97,8 +97,7 @@ impl Default for PlayerProfile {
 pub struct SettingsPlugin;
 impl Plugin for SettingsPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_startup_system(load_settings)
+        app.add_startup_system(load_settings)
             .add_system(changed_settings);
     }
 }
@@ -211,5 +210,5 @@ impl ActiveBinding {
 #[derive(Copy, Clone)]
 pub struct BindingConflict {
     pub action: PlayerAction,
-    pub input_button: InputButton,
+    pub input_button: InputKind,
 }

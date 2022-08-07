@@ -1,7 +1,8 @@
 use bevy::prelude::{Color, Plugin};
 
-use self::mouse::MousePlugin;
+use self::{modelloading::ModelPlugin, mouse::MousePlugin};
 pub mod camera;
+pub mod modelloading;
 pub mod mouse;
 pub mod ui;
 pub struct MapManifest {
@@ -60,7 +61,8 @@ impl Plugin for MacroUtils {
         }
 
         app.insert_resource(MapManifest { map_files })
-            .add_plugin(MousePlugin);
+            .add_plugin(MousePlugin)
+            .add_plugin(ModelPlugin);
     }
 }
 

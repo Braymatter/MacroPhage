@@ -1,5 +1,4 @@
-use bevy::{input::mouse::MouseWheel, prelude::*};
-use bevy::ecs::system::QuerySingleError;
+use bevy::{ecs::query::QuerySingleError, input::mouse::MouseWheel, prelude::*};
 use bevy_mod_picking::PickingCameraBundle;
 use leafwing_input_manager::prelude::ActionState;
 
@@ -58,7 +57,7 @@ impl Default for CameraState {
 pub struct PlayerCamMarker;
 pub fn spawn_camera(mut commands: Commands) {
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
+        .spawn_bundle(Camera3dBundle {
             transform: Transform::from_xyz(0.0, 15.0, 0.0).looking_at(Vec3::ZERO, -Vec3::X),
             ..default()
         })
@@ -87,7 +86,8 @@ pub fn pan_cam(
                 }
 
                 if actions.pressed(PlayerAction::PanRight) {
-                    let translation = transform.right() * cam_state.pan_speed * time.delta_seconds();
+                    let translation =
+                        transform.right() * cam_state.pan_speed * time.delta_seconds();
                     transform.translation += translation;
                 }
 
@@ -109,8 +109,6 @@ pub fn pan_cam(
             panic!("[Pan Cam] Error: There is more than one ActionState!");
         }
     }
-
-
 }
 
 fn pan_cam_mouse(
@@ -178,7 +176,8 @@ pub fn zoom_cam(
                 if actions.pressed(PlayerAction::ZoomIn)
                     && transform.translation.y > cam_state.zoom_target_level
                 {
-                    translation += transform.forward() * (time.delta_seconds() * cam_state.zoom_speed);
+                    translation +=
+                        transform.forward() * (time.delta_seconds() * cam_state.zoom_speed);
                 }
 
                 if actions.pressed(PlayerAction::ZoomOut) {
@@ -194,7 +193,9 @@ pub fn zoom_cam(
                                 * cam_state.zoom_speed;
                         }
                         bevy::input::mouse::MouseScrollUnit::Pixel => {
-                            error!("If you're seeing this reach out about your zooming experience!");
+                            error!(
+                                "If you're seeing this reach out about your zooming experience!"
+                            );
                             translation += transform.forward()
                                 * wheel_event.y
                                 * time.delta_seconds()

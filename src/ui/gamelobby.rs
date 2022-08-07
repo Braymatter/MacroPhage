@@ -4,10 +4,11 @@ use bevy_egui::{
 };
 
 use bevy::prelude::*;
-use bevy_egui::egui::{Color32, Frame, RichText, Stroke};
 use bevy_egui::egui::style::Margin;
+use bevy_egui::egui::{Color32, Frame, RichText, Stroke};
 use bevy_inspector_egui::egui;
 
+use crate::util::ui::set_ui_style;
 use crate::{
     game::LevelManagerRes,
     util::{
@@ -15,7 +16,6 @@ use crate::{
         MapManifest,
     },
 };
-use crate::util::ui::set_ui_style;
 
 use super::{UIState, UIStateRes};
 
@@ -89,10 +89,10 @@ pub fn lobby(
         });
 
         ui.horizontal(|ui| {
-            ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
+            ui.visuals_mut().widgets.inactive.expansion = -5.; // bug with egui imagebutton padding
             let play_btn = ui.add(egui::ImageButton::new(images.launch_id, btn_size));
             let back_btn = ui.add(egui::ImageButton::new(images.main_menu_id, btn_size));
-            ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
+            ui.visuals_mut().widgets.inactive.expansion = 0.; // end bug fix
 
             let (mut cam_state, _) = player_cam.single_mut();
 

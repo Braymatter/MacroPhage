@@ -1,16 +1,13 @@
-use bevy_egui::{
-    egui::{Align2},
-    EguiContext,
-};
+use bevy_egui::{egui::Align2, EguiContext};
 
 use bevy::prelude::*;
 use bevy_inspector_egui::egui;
 
+use crate::util::ui::{set_ui_style, set_ui_style_none};
 use crate::{
     game::LevelManagerRes,
     util::camera::{CameraState, PlayerCamMarker},
 };
-use crate::util::ui::{set_ui_style, set_ui_style_none};
 
 use super::{UIState, UIStateRes};
 
@@ -77,9 +74,12 @@ pub fn game_hud(
         .interactable(true)
         .show(ctx, |ui| {
             set_ui_style(ui);
-            ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
-            let return_to_menu = ui.add(egui::ImageButton::new(images.main_menu_id, egui::vec2(100., 40.)));
-            ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
+            ui.visuals_mut().widgets.inactive.expansion = -5.; // bug with egui imagebutton padding
+            let return_to_menu = ui.add(egui::ImageButton::new(
+                images.main_menu_id,
+                egui::vec2(100., 40.),
+            ));
+            ui.visuals_mut().widgets.inactive.expansion = 0.; // end bug fix
 
             // TODO: verify leaving the game or hide this until escape is pressed
             if return_to_menu.clicked() {

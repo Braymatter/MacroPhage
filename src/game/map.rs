@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use std::fs::File;
 use std::io::BufReader;
 
+use crate::util::modelloading::NodeTenentAssets;
+
 use super::{GameState, LevelManagerRes, Mutation, MutationFailed, PlayerMutationEvent};
 
 pub fn process_map_mutations(
@@ -51,6 +53,8 @@ pub fn spawn_map(
     _assets: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    //Option just so it doesn't crash while things load
+    node_models: Option<Res<NodeTenentAssets>>,
     level_manager: Res<LevelManagerRes>,
     mut maps: Query<(&GameState, Entity)>,
 ) {
@@ -82,12 +86,18 @@ pub fn spawn_map(
     let map: GameState = serde_json::from_reader(reader).unwrap();
 
     let map_ent = commands
-        .spawn_bundle(TransformBundle::default())
+        .spawn_bundle(SpatialBundle::default())
         .insert(Name::new("Map"))
         .id();
     let mut node_ents = Vec::default();
     for node in map.nodes.values() {
-        node_ents.push(map.spawn_node(node, &mut commands, &mut meshes, &mut materials));
+        node_ents.push(map.spawn_node(
+            node,
+            &mut commands,
+            node_models.as_ref().unwrap(),
+            &mut meshes,
+            &mut materials,
+        ));
     }
 
     let mut vector_ents = Vec::default();
@@ -102,8 +112,17 @@ pub fn spawn_map(
         vector_ents.push(
             commands
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
-                    material: materials.add(Color::rgb(0.8, 0.1, 0.1).into()),
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.25,
+                        subdivisions: 10,
+                    })),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::rgba(0.8, 0.1, 0.1, 0.8),
+                        //emissive appears to do nothing
+                        //emissive: Color::rgb(0.1, 0.1, 0.1),
+                        alpha_mode: AlphaMode::Blend,
+                        ..default()
+                    }),
                     transform,
                     ..default()
                 })
