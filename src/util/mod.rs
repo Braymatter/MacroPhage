@@ -4,6 +4,7 @@ use self::{modelloading::ModelPlugin, mouse::MousePlugin};
 pub mod camera;
 pub mod modelloading;
 pub mod mouse;
+pub mod ui;
 pub struct MapManifest {
     pub map_files: Vec<String>,
 }

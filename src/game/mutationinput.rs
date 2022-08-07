@@ -15,36 +15,36 @@ pub fn mutation_selection(
     mut selected: ResMut<MutationSelection>,
     actions: Query<&ActionState<PlayerAction>>,
 ) {
-    let actions = actions.single();
-
-    if actions.just_pressed(PlayerAction::HotKey1) {
-        //XXX these are not the values used for cost or id, this just sets the selected mutation!
-        selected.0 = Mutation::TriggerRecombinator {
-            target: NodeId::default(),
-            cost: 0,
-        };
-    }
-    if actions.just_pressed(PlayerAction::HotKey2) {
-        //XXX these are not the values used for cost or id, this just sets the selected mutation!
-        selected.0 = Mutation::AddVector {
-            relation: Vector::default(),
-            cost: 0,
-        };
-    }
-    if actions.just_pressed(PlayerAction::HotKey3) {
-        //XXX these are not the values used for cost or id, this just sets the selected mutation!
-        selected.0 = Mutation::RemoveVector {
-            relation: Vector::default(),
-            cost: 0,
-        };
-    }
-    if actions.just_pressed(PlayerAction::HotKey4) {
-        //XXX these are not the values used for cost or id, this just sets the selected mutation!
-        selected.0 = Mutation::ChangeReplicatorType {
-            replicator: NodeId::default(),
-            new_type: super::PhageType::UV,
-            cost: 0,
-        };
+    if let Ok(actions) = actions.get_single() {
+        if actions.just_pressed(PlayerAction::HotKey1) {
+            //XXX these are not the values used for cost or id, this just sets the selected mutation!
+            selected.0 = Mutation::TriggerRecombinator {
+                target: NodeId::default(),
+                cost: 0,
+            };
+        }
+        if actions.just_pressed(PlayerAction::HotKey2) {
+            //XXX these are not the values used for cost or id, this just sets the selected mutation!
+            selected.0 = Mutation::AddVector {
+                relation: Vector::default(),
+                cost: 0,
+            };
+        }
+        if actions.just_pressed(PlayerAction::HotKey3) {
+            //XXX these are not the values used for cost or id, this just sets the selected mutation!
+            selected.0 = Mutation::RemoveVector {
+                relation: Vector::default(),
+                cost: 0,
+            };
+        }
+        if actions.just_pressed(PlayerAction::HotKey4) {
+            //XXX these are not the values used for cost or id, this just sets the selected mutation!
+            selected.0 = Mutation::ChangeReplicatorType {
+                replicator: NodeId::default(),
+                new_type: super::PhageType::UV,
+                cost: 0,
+            };
+        }
     }
 }
 
