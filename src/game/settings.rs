@@ -166,9 +166,11 @@ fn changed_settings(
 ) {
     if game_settings.is_changed() || ! *loaded {
         // change display mode if needed
-        let window = windows.get_primary_mut().unwrap();
-        if game_settings.actual_settings.window_display_mode != window.mode() {
-            window.set_mode(game_settings.actual_settings.window_display_mode);
+        if windows.get_primary_mut().is_some() {
+            let window = windows.get_primary_mut().unwrap();
+            if game_settings.actual_settings.window_display_mode != window.mode() {
+                window.set_mode(game_settings.actual_settings.window_display_mode);
+            }
         }
 
         // change bindings

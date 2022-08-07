@@ -299,7 +299,6 @@ pub fn binding_window_system(
 pub struct InputEvents<'w, 's> {
     keys: EventReader<'w, 's, KeyboardInput>,
     mouse_buttons: EventReader<'w, 's, MouseButtonInput>,
-    gamepad_events: EventReader<'w, 's, GamepadEvent>,
 }
 
 impl InputEvents<'_, '_> {
@@ -317,14 +316,6 @@ impl InputEvents<'_, '_> {
                 return Some(mouse_input.button.into());
             }
         }
-
-        //if let Some(GamepadEvent(_, event_type)) = self.gamepad_events.iter().next() {
-        //if let GamepadEventType::ButtonChanged(button, strength) = event_type.to_owned() {
-        //if strength <= 0.5 {
-        //return Some(button.into());
-        //}
-        //}
-        //}
 
         None
     }

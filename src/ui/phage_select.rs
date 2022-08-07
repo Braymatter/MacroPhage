@@ -1,31 +1,23 @@
 use std::f32::consts::PI;
-use bevy::core_pipeline::{AlphaMask3d, draw_3d_graph, node, Opaque3d, RenderTargetClearColors, Transparent3d};
+use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::prelude::*;
-use bevy::render::camera::{ActiveCamera, CameraTypePlugin, RenderTarget};
-use bevy::render::render_graph::{NodeRunError, RenderGraph, RenderGraphContext, SlotValue};
-use bevy::render::render_graph::Node;
-use bevy::render::{RenderApp, RenderStage};
-use bevy::render::render_phase::RenderPhase;
+use bevy::render::camera::{RenderTarget};
+use bevy::render::render_graph::{RenderGraph, RenderGraphContext, SlotValue};
 use bevy::render::render_resource::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages};
-use bevy::render::renderer::RenderContext;
 use bevy::render::view::{RenderLayers};
 use bevy::scene::InstanceId;
 use iyes_loopless::prelude::*;
 use crate::game::settings::{PhageVariant, ReadWriteGameSettings};
-use crate::ui::phage_select::RenderGraphState::Unloaded;
 use crate::ui::show_profile_screen;
 
 pub struct PhageSelectPlugin;
 
 #[derive(Component, Default)]
-pub struct Phage3dCamera {}
+pub struct Phage3dCamera;
 
 pub struct RenderedPhage {
     pub image: Handle<Image>,
 }
-
-/// The static name of the node for this graph pass in the multi-pass render.
-pub const PHAGE_PASS_DRIVER: &str = "phage_camera_pass_driver";
 
 const PHAGE_PASS_LAYER: RenderLayers = RenderLayers::layer(1);
 
@@ -34,7 +26,6 @@ const PHAGE_PASS_LAYER: RenderLayers = RenderLayers::layer(1);
 impl Plugin for PhageSelectPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_plugin(CameraTypePlugin::<Phage3dCamera>::default())
             .init_resource::<SceneInstance>()
             .init_resource::<PhageEngine>()
             .add_startup_system(setup)
@@ -43,58 +34,6 @@ impl Plugin for PhageSelectPlugin {
             .add_system(load.run_if(show_profile_screen))
             .add_system(unload.run_if_not(show_profile_screen))
             .add_system(tag_scene);
-
-        if let Ok(render_app) = app.get_sub_app_mut(RenderApp) {
-            let driver = PhageCameraDriver::new(&mut render_app.world);
-            render_app.add_system_to_stage(RenderStage::Extract, extract_phage_pass_camera_phases);
-
-            let mut render_graph = render_app.world.get_resource_mut::<RenderGraph>().unwrap();
-            render_graph.add_node(PHAGE_PASS_DRIVER, driver);
-            render_graph.add_node_edge(node::MAIN_PASS_DEPENDENCIES, PHAGE_PASS_DRIVER).unwrap();
-            render_graph.add_node_edge(node::CLEAR_PASS_DRIVER, PHAGE_PASS_DRIVER).unwrap();
-            render_graph.add_node_edge(PHAGE_PASS_DRIVER, node::MAIN_PASS_DRIVER).unwrap();
-
-            println!("[Phage Selector] initialized");
-        }
-    }
-}
-
-// Add render phases for this camera
-fn extract_phage_pass_camera_phases(
-    mut commands: Commands,
-    active: Res<ActiveCamera<Phage3dCamera>>,
-) {
-    if let Some(entity) = active.get() {
-        commands.get_or_spawn(entity).insert_bundle((
-            RenderPhase::<Opaque3d>::default(),
-            RenderPhase::<AlphaMask3d>::default(),
-            RenderPhase::<Transparent3d>::default(),
-        ));
-    }
-}
-
-struct PhageCameraDriver {
-    query: QueryState<Entity, With<Phage3dCamera>>,
-}
-
-impl PhageCameraDriver {
-    pub fn new(render_world: &mut World) -> Self {
-        Self {
-            query: QueryState::new(render_world),
-        }
-    }
-}
-
-impl Node for PhageCameraDriver {
-    fn update(&mut self, world: &mut World) {
-        self.query.update_archetypes(world);
-    }
-
-    fn run(&self, graph: &mut RenderGraphContext, _render_context: &mut RenderContext, world: &World) -> Result<(), NodeRunError> {
-        for camera in self.query.iter_manual(world) {
-            graph.run_sub_graph(draw_3d_graph::NAME, vec![SlotValue::Entity(camera)])?;
-        }
-        Ok(())
     }
 }
 
@@ -125,7 +64,6 @@ struct CrownModel;
 #[allow(clippy::too_many_arguments)]
 fn setup(
     mut commands: Commands,
-    mut clear_colors: ResMut<RenderTargetClearColors>,
     mut images: ResMut<Assets<Image>>,
     mut scene_spawner: ResMut<SceneSpawner>,
     mut scene_instance: ResMut<SceneInstance>,
@@ -159,38 +97,60 @@ fn setup(
     });
 
     let render_target = RenderTarget::Image(image_handle.clone());
-    clear_colors.insert(render_target.clone(), Color::rgba(0., 0., 0., 0.));
-    commands.spawn_bundle(PerspectiveCameraBundle::<Phage3dCamera> {
+
+    commands.spawn_bundle(Camera3dBundle {
+        camera_3d: Camera3d {
+            //clear_color: ClearColorConfig::Custom(Color::rgba(0., 0., 0., 0.)),
+            clear_color: ClearColorConfig::Default,
+            ..default()
+        },
         camera: Camera {
+            priority: -1,
             target: render_target,
-            ..Default::default()
+            ..default()
         },
         transform: Transform::from_translation(Vec3::new(19.0, 27.0, 25.0))
             .looking_at(Vec3::default(), Vec3::Y),
-        ..PerspectiveCameraBundle::new()
-        })
-        .insert(PHAGE_PASS_LAYER);
-
-    commands.spawn_bundle(TransformBundle::from(Transform::from_xyz(0., 0., 0.)))
-        .with_children(|p| {
-            let phage_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/Avatar Phage.glb#Scene0"), p.parent_entity());
-            let antenna_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/Antenna.glb#Scene0"), p.parent_entity());
-            let cowboy_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/CowboyHat.glb#Scene0"), p.parent_entity());
-            let crown_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/crown.glb#Scene0"), p.parent_entity());
-
-            scene_instance.phage = Some(phage_instance_id);
-            scene_instance.antenna = Some(antenna_instance_id);
-            scene_instance.cowboy = Some(cowboy_instance_id);
-            scene_instance.crown = Some(crown_instance_id);
+            ..default()
         })
         .insert(PHAGE_PASS_LAYER)
-        .insert(PhageWholeModel);
+        .insert(Phage3dCamera);
+
+    let phage_instance_id = scene_spawner.spawn(asset_server.load("meshes/Avatar Phage.glb#Scene0"));
+    let antenna_instance_id = scene_spawner.spawn(asset_server.load("meshes/Antenna.glb#Scene0"));
+    let cowboy_instance_id = scene_spawner.spawn(asset_server.load("meshes/CowboyHat.glb#Scene0"));
+    let crown_instance_id = scene_spawner.spawn(asset_server.load("meshes/crown.glb#Scene0"));
+
+    scene_instance.phage = Some(phage_instance_id);
+    scene_instance.antenna = Some(antenna_instance_id);
+    scene_instance.cowboy = Some(cowboy_instance_id);
+    scene_instance.crown = Some(crown_instance_id);
+
+
+    // TODO: file bug with Bevy 0.8, this should work but something is wrong in the view hierarchy introduced with
+    //       0.8 with the bundles + layers and simplified pipeline. Old commit works fine on 0.7 to compare.
+
+    // commands.spawn_bundle(TransformBundle::from(Transform::from_xyz(0., 0., 0.)))
+    //     .insert(PHAGE_PASS_LAYER)
+    //     .insert(PhageWholeModel)
+    //     .with_children(|p| {
+    //         let phage_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/Avatar Phage.glb#Scene0"), p.parent_entity());
+    //         let antenna_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/Antenna.glb#Scene0"), p.parent_entity());
+    //         let cowboy_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/CowboyHat.glb#Scene0"), p.parent_entity());
+    //         let crown_instance_id = scene_spawner.spawn_as_child(asset_server.load("meshes/crown.glb#Scene0"), p.parent_entity());
+    //
+    //         scene_instance.phage = Some(phage_instance_id);
+    //         scene_instance.antenna = Some(antenna_instance_id);
+    //         scene_instance.cowboy = Some(cowboy_instance_id);
+    //         scene_instance.crown = Some(crown_instance_id);
+    //     });
 
     // Warning: lights are shared between passes - see https://github.com/bevyengine/bevy/issues/3462
     commands.spawn_bundle(PointLightBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 10.0)),
-        ..Default::default()
-    });
+            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 10.0)),
+            ..Default::default()
+        })
+        .insert(PHAGE_PASS_LAYER);
 }
 
 /// Attaching entities to scenes is convoluted because the scenes
@@ -212,6 +172,7 @@ fn tag_scene(
         if let Some(instance_id) = scene_instance.phage {
             if let Some(entity_iter) = scene_spawner.iter_instance_entities(instance_id) {
                 entity_iter.for_each(|entity| {
+                    println!("[Phage Select] base model ready {}", entity.id());
                     commands.entity(entity).insert(PHAGE_PASS_LAYER);
                     commands.entity(entity).insert(PhageModel);
                 });
@@ -225,6 +186,7 @@ fn tag_scene(
         if let Some(instance_id) = scene_instance.antenna {
             if let Some(entity_iter) = scene_spawner.iter_instance_entities(instance_id) {
                 entity_iter.for_each(|entity| {
+                    println!("[Phage Select] antenna model ready {}", entity.id());
                     commands.entity(entity).insert(PHAGE_PASS_LAYER);
                     commands.entity(entity).insert(AntennaModel);
                 });
@@ -238,6 +200,7 @@ fn tag_scene(
         if let Some(instance_id) = scene_instance.cowboy {
             if let Some(entity_iter) = scene_spawner.iter_instance_entities(instance_id) {
                 entity_iter.for_each(|entity| {
+                    println!("[Phage Select] cowboy hat model ready {}", entity.id());
                     commands.entity(entity).insert(PHAGE_PASS_LAYER);
                     commands.entity(entity).insert(CowboyModel);
                 });
@@ -251,6 +214,7 @@ fn tag_scene(
         if let Some(instance_id) = scene_instance.crown {
             if let Some(entity_iter) = scene_spawner.iter_instance_entities(instance_id) {
                 entity_iter.for_each(|entity| {
+                    println!("[Phage Select] crown model ready {}", entity.id());
                     commands.entity(entity).insert(PHAGE_PASS_LAYER);
                     commands.entity(entity).insert(CrownModel);
                 });
@@ -263,11 +227,11 @@ fn tag_scene(
 
 fn phage_rotation(
     time: Res<Time>,
-    mut query: Query<&mut Transform, With<PhageWholeModel>>,
+    mut query: Query<&mut Transform, With<Phage3dCamera>>,
 ) {
     for mut transform in query.iter_mut() {
         let rotation = Quat::from_rotation_y(2.0 * PI * 0.2 * time.delta_seconds());
-        transform.rotate(rotation);
+        transform.rotate_around(Vec3::default(), rotation);
     }
 }
 
@@ -315,7 +279,7 @@ pub struct PhageEngine {
 impl Default for PhageEngine {
     fn default() -> Self {
         PhageEngine {
-            render_graph_state: Unloaded
+            render_graph_state: RenderGraphState::Unloaded
         }
     }
 }
@@ -326,44 +290,30 @@ pub enum RenderGraphState {
     Loaded,
 }
 
-#[allow(clippy::unnecessary_unwrap)]
 fn load(
-    mut query: Query<&mut Transform, With<Phage3dCamera>>,
+    mut query: Query<&mut Camera, With<Phage3dCamera>>,
     mut state: ResMut<PhageEngine>,
 ){
-    println!("[Phage Selector] LLL");
+    if state.render_graph_state == RenderGraphState::Unloaded {
+        for mut camera in query.iter_mut() {
+            camera.is_active = true;
+        }
 
-    // render nodes in the correct order
-    // this is what lets everything get layered correctly
-    // if query.is_some() && state.render_graph_state == Unloaded {
-    //     let mut render_graph = render_graph.unwrap();
-    //     render_graph.add_node_edge(node::MAIN_PASS_DEPENDENCIES, PHAGE_PASS_DRIVER).unwrap();
-    //     render_graph.add_node_edge(node::CLEAR_PASS_DRIVER, PHAGE_PASS_DRIVER).unwrap();
-    //     render_graph.add_node_edge(PHAGE_PASS_DRIVER, node::MAIN_PASS_DRIVER).unwrap();
-    //
-    //     println!("[Phage Selector] added graph edges for phage view");
-    //     state.render_graph_state = RenderGraphState::Loaded;
-    // }
+        println!("[Phage Selector] phage view active");
+        state.render_graph_state = RenderGraphState::Loaded;
+    }
 }
 
-#[allow(clippy::unnecessary_unwrap)]
 fn unload(
     mut query: Query<&mut Camera, With<Phage3dCamera>>,
     mut state: ResMut<PhageEngine>,
 ){
-    println!("[Phage Selector] UUU");
+    if state.render_graph_state == RenderGraphState::Loaded {
+        for mut camera in query.iter_mut() {
+            camera.is_active = false;
+        }
 
-    for mut transform in query.iter_mut() {
-        println!("lol");
+        println!("[Phage Selector] phage view inactive");
+        state.render_graph_state = RenderGraphState::Unloaded;
     }
-
-    // if query.is_some() && state.render_graph_state == RenderGraphState::Loaded {
-    //     let mut render_graph = query.unwrap();
-    //     render_graph.remove_node_edge(node::MAIN_PASS_DEPENDENCIES, PHAGE_PASS_DRIVER).unwrap();
-    //     render_graph.remove_node_edge(node::CLEAR_PASS_DRIVER, PHAGE_PASS_DRIVER).unwrap();
-    //     render_graph.remove_node_edge(PHAGE_PASS_DRIVER, node::MAIN_PASS_DRIVER).unwrap();
-    //
-    //     println!("[Phage Selector] removed graph edges for phage view");
-    //     state.render_graph_state = Unloaded;
-    // }
 }

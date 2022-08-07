@@ -71,6 +71,8 @@ fn move_cursor(
             });
     }
 
-    let window = windows.get_primary_mut().unwrap();
-    window.set_cursor_visibility(game_settings.actual_settings.use_hardware_mouse);
+    if windows.get_primary_mut().is_some() {
+        let window = windows.get_primary_mut().unwrap();
+        window.set_cursor_visibility(game_settings.actual_settings.use_hardware_mouse);
+    }
 }
