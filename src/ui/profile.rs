@@ -86,6 +86,7 @@ pub fn profile(
         let btn_size = egui::vec2(BTN_SIZE.0, BTN_SIZE.1);
 
         egui::TopBottomPanel::top("top_panel")
+            .resizable(false)
             .frame(Frame {
                 fill: Color32::TRANSPARENT,
                 ..default()
@@ -97,6 +98,7 @@ pub fn profile(
             });
 
         egui::SidePanel::left("left_panel")
+            .resizable(false)
             .frame(Frame {
                 fill: Color32::TRANSPARENT,
                 ..default()
@@ -126,6 +128,7 @@ pub fn profile(
             });
 
         egui::SidePanel::right("right_panel")
+            .resizable(false)
             .frame(Frame {
                 fill: Color32::TRANSPARENT,
                 ..default()
@@ -144,6 +147,7 @@ pub fn profile(
             });
 
         egui::TopBottomPanel::bottom("bottom_panel")
+            .resizable(false)
             .frame(Frame {
                 fill: Color32::TRANSPARENT,
                 ..default()
