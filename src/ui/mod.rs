@@ -1,9 +1,11 @@
 mod game;
 mod gamelobby;
+mod profile;
 mod mainmenu;
 mod settingsmenu;
 
 pub mod mousecursor_egui;
+pub mod phage_select;
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
@@ -34,6 +36,7 @@ pub enum UIState {
     JoinLobby,
     JoiningLobby { lobby_id: String },
     Game,
+    Profile
 }
 
 pub struct UIStateRes {
@@ -51,6 +54,7 @@ impl Plugin for UIStatePlugin {
         .add_system(self::settingsmenu::controls_window.run_if(show_settings_menu))
         .add_system(self::gamelobby::lobby.run_if(show_lobby_screen))
         .add_system(self::game::game_hud.run_if(show_game_hud))
+        .add_system(self::profile::profile.run_if(show_profile_screen))
         .add_system(binding_window_system);
     }
 }
@@ -70,4 +74,8 @@ fn show_settings_menu(ui_state: Res<UIStateRes>) -> bool {
 
 fn show_game_hud(ui_state: Res<UIStateRes>) -> bool {
     matches!(&ui_state.current_state, UIState::Game)
+}
+
+fn show_profile_screen(ui_state: Res<UIStateRes>) -> bool {
+    matches!(&ui_state.current_state, UIState::Profile)
 }

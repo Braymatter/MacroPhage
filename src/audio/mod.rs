@@ -126,12 +126,15 @@ fn play_bgm(asset_server: Res<AssetServer>, bgm: Res<AudioChannel<BgmChannel>>) 
 fn change_volume(
     bgm: Res<AudioChannel<BgmChannel>>,
     game_settings: ResMut<ReadWriteGameSettings>,
+    mut loaded: Local<bool>,
 ) {
-    if game_settings.is_changed() {
+    if game_settings.is_changed() || ! *loaded {
         if game_settings.actual_settings.music_enabled {
             bgm.set_volume(1.0);
         } else {
             bgm.set_volume(0.0);
         }
+
+        *loaded = true;
     }
 }

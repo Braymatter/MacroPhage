@@ -7,7 +7,7 @@ use bevy::{
 };
 use bevy::window::WindowMode;
 use bevy_egui::{egui::{Align2, Grid, Window}, egui, EguiContext};
-use bevy_egui::egui::{Color32, Frame, Stroke};
+use bevy_egui::egui::{Color32, Frame, RichText, Stroke};
 use bevy_egui::egui::style::Margin;
 use directories::ProjectDirs;
 use leafwing_input_manager::{prelude::*, user_input::InputButton};
@@ -23,8 +23,10 @@ const UI_MARGIN: f32 = 10.0;
 pub struct Images {
     save: Handle<Image>,
     cancel: Handle<Image>,
+    edit_profile: Handle<Image>,
     save_id: egui::TextureId,
     cancel_id: egui::TextureId,
+    edit_profile_id: egui::TextureId,
 }
 
 pub struct TinyImages {
@@ -43,8 +45,10 @@ impl FromWorld for Images {
         Self {
             save: asset_server.load("UI/save_and_exit.png"),
             cancel: asset_server.load("UI/cancel.png"),
+            edit_profile: asset_server.load("UI/edit_profile.png"),
             save_id: egui::TextureId::default(),
             cancel_id: egui::TextureId::default(),
+            edit_profile_id: egui::TextureId::default(),
         }
     }
 }
@@ -75,6 +79,7 @@ pub fn controls_window(
         *is_initialized = true;
         images.save_id = egui_context.add_image(images.save.clone_weak());
         images.cancel_id = egui_context.add_image(images.cancel.clone_weak());
+        images.edit_profile_id = egui_context.add_image(images.edit_profile.clone_weak());
     }
 
     let main_window = windows.get_primary().unwrap();
@@ -82,14 +87,14 @@ pub fn controls_window(
 
     let controls = game_settings.pending_settings.inputs.clone();
 
-    Window::new("Settings")
+    Window::new(RichText::new("Settings").color(Color32::WHITE).size(32.))
         .anchor(Align2::CENTER_CENTER, (0.0, 0.0))
         .collapsible(false)
         .resizable(false)
         .frame(Frame {
-            fill: Color32::from_rgb(27, 51, 60),
+            fill: Color32::from_rgb(0, 38, 38),
             inner_margin: Margin::same(8.0),
-            stroke: Stroke::new(0.6, Color32::from_rgb(36, 209, 183)),
+            stroke: Stroke::new(0.6, Color32::from_rgb(50, 232, 214)),
             ..default()
         })
         .default_width(main_window.width() - UI_MARGIN * 2.0 - window_width_margin)
@@ -146,6 +151,7 @@ pub fn controls_window(
             ui.horizontal(|ui| {
                 ui.visuals_mut().widgets.inactive.expansion = -5.;  // bug with egui imagebutton padding
                 let return_to_menu = ui.add(egui::ImageButton::new(images.save_id, btn_size)).clicked();
+                let edit_profile = ui.add(egui::ImageButton::new(images.edit_profile_id, btn_size)).clicked();
                 let cancel = ui.add(egui::ImageButton::new(images.cancel_id, btn_size)).clicked();
                 ui.visuals_mut().widgets.inactive.expansion = 0.;   // end bug fix
 
@@ -166,6 +172,12 @@ pub fn controls_window(
 
                     }
                     ui_state.current_state = UIState::MainMenu;
+                }
+
+                if edit_profile {
+                    // don't save settings if moving to profile screen
+                    game_settings.pending_settings = game_settings.actual_settings.clone();
+                    ui_state.current_state = UIState::Profile;
                 }
 
                 if cancel {
@@ -204,9 +216,9 @@ pub fn binding_window_system(
         .collapsible(false)
         .resizable(false)
         .frame(Frame {
-            fill: Color32::from_rgb(27, 51, 60),
+            fill: Color32::from_rgb(0, 38, 38),
             inner_margin: Margin::same(8.0),
-            stroke: Stroke::new(0.6, Color32::from_rgb(36, 209, 183)),
+            stroke: Stroke::new(0.6, Color32::from_rgb(50, 232, 214)),
             ..default()
         })
         .show(egui.ctx_mut(), |ui| {

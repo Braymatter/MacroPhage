@@ -4,7 +4,7 @@ use bevy_egui::{
 };
 
 use bevy::prelude::*;
-use bevy_egui::egui::{Color32, Frame, Stroke};
+use bevy_egui::egui::{Color32, Frame, RichText, Stroke};
 use bevy_egui::egui::style::Margin;
 use bevy_inspector_egui::egui;
 
@@ -66,14 +66,14 @@ pub fn lobby(
     let main_window = windows.get_primary().unwrap();
     let window_width_margin = egui_context.ctx_mut().style().spacing.window_margin.left * 2.0;
 
-    let lobby = Window::new("Lobby")
+    let lobby = Window::new(RichText::new("Lobby").color(Color32::WHITE).size(32.))
         .anchor(Align2::CENTER_CENTER, egui::vec2(0.0, -50.0))
         .resizable(false)
         .collapsible(false)
         .frame(Frame {
-            fill: Color32::from_rgb(27, 51, 60),
+            fill: Color32::from_rgb(0, 38, 38),
             inner_margin: Margin::same(8.0),
-            stroke: Stroke::new(0.6, Color32::from_rgb(36, 209, 183)),
+            stroke: Stroke::new(0.6, Color32::from_rgb(50, 232, 214)),
             ..default()
         })
         .default_width(main_window.width() - UI_MARGIN * 2.0 - window_width_margin);

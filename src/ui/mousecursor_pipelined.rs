@@ -14,7 +14,7 @@ use bevy::sprite::Anchor;
 use bevy::window::WindowId;
 use crate::util::mouse::MousePosition;
 
-pub struct MouseCursorPlugin {}
+pub struct MouseCursorPipelinedPlugin;
 
 #[derive(Component)]
 pub struct MouseCursor {}
@@ -30,7 +30,7 @@ pub const MOUSE_OFFSET: (f32, f32) = (-4., 0.);
 
 /// Tracks the mouse on the screen and renders a cursor on top of its position.
 /// This uses a separate orthgraphic 2d camera and two rendering phases to layer correctly in-game.
-impl Plugin for MouseCursorPlugin {
+impl Plugin for MouseCursorPipelinedPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_plugin(CameraTypePlugin::<Mouse2dCamera>::default())
@@ -156,8 +156,8 @@ fn load_mouse_cursor(
 
 fn move_cursor(mouse_pos: ResMut<MousePosition>, mut windows: ResMut<Windows>, mut query: Query<(&mut Transform, &MouseCursor)>) {
     for (mut transform, _) in query.iter_mut() {
-        transform.translation.x = (mouse_pos.pixel_pos.x) + (MOUSE_OFFSET.0);
-        transform.translation.y = (mouse_pos.pixel_pos.y) - (MOUSE_OFFSET.1);
+        transform.translation.x = (mouse_pos.ndc.x) + (MOUSE_OFFSET.0);
+        transform.translation.y = (mouse_pos.ndc.y) - (MOUSE_OFFSET.1);
     }
 
     // TODO: base this off a "Use Hardware Mouse" setting

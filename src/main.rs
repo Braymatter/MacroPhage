@@ -13,6 +13,8 @@ use macrophage::{
     util::{camera::MacroCamPlugin, MacroUtils},
 };
 use macrophage::game::settings::{ReadWriteGameSettings, SettingsPlugin};
+use macrophage::ui::phage_select::PhageSelectPlugin;
+use macrophage::util::ui::CustomEguiStyle;
 
 pub const HEIGHT: f32 = 900.0;
 pub const RESOLUTION: f32 = 16.0 / 9.0;
@@ -38,7 +40,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         //Egui (must be before inspector)
         .add_plugin(EguiPlugin)
-        .add_plugin(MouseCursorPlugin {})
+        .add_plugin(CustomEguiStyle)
+        .add_plugin(MouseCursorPlugin)
         //Egui Inspector
         .insert_resource(WorldInspectorParams {
             enabled: false,
@@ -57,6 +60,7 @@ fn main() {
         //Things that need keybinds should load after the player
         .add_plugin(MacroCamPlugin {})
         .add_system(toggle_inspector)
+        .add_plugin(PhageSelectPlugin)
         //Audio
         .add_plugin(GameAudioPlugin);
     app.run();

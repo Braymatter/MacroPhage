@@ -1,6 +1,7 @@
 use bevy::{app::AppExit, prelude::*};
 use bevy_egui::{egui, EguiContext};
 use bevy_egui::egui::{Color32, Frame};
+use crate::game::settings::ReadWriteGameSettings;
 use crate::util::ui::set_ui_style;
 
 use super::{UIState, UIStateRes};
@@ -38,6 +39,7 @@ pub fn main_menu(
     mut egui_context: ResMut<EguiContext>,
     mut ui_state: ResMut<UIStateRes>,
     mut exit_writer: EventWriter<AppExit>,
+    game_settings: ResMut<ReadWriteGameSettings>,
     mut is_initialized: Local<bool>,
     mut images: Local<Images>,
 ) {
@@ -48,6 +50,11 @@ pub fn main_menu(
         images.settings_id = egui_context.add_image(images.settings.clone_weak());
         images.exit_id = egui_context.add_image(images.exit.clone_weak());
 
+        // redirect to profile screen if we don't have one yet
+        if game_settings.actual_profile.name.is_empty() {
+            ui_state.current_state = UIState::Profile;
+        }
+
     }
     egui::Window::new("Main Menu")
         .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, -50.0))
@@ -55,7 +62,7 @@ pub fn main_menu(
         .collapsible(false)
         .title_bar(false)
         .frame(Frame {
-            fill: Color32::from_rgb(27, 51, 60),
+            fill: Color32::from_rgb(0, 38, 38),
             ..default()
         })
         .show(egui_context.ctx_mut(), |ui| {

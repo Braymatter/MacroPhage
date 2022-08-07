@@ -3,7 +3,7 @@ use bevy::render::camera::CameraTypePlugin;
 use bevy_egui::{egui, EguiContext};
 use crate::game::settings::ReadWriteGameSettings;
 
-pub struct MouseCursorPlugin {}
+pub struct MouseCursorPlugin;
 
 pub struct MouseCursor {
     normal: Handle<Image>,

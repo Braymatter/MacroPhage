@@ -18,6 +18,8 @@ use crate::game::controller::PlayerAction;
 pub struct ReadWriteGameSettings {
     pub actual_settings: GameSettings,
     pub(crate) pending_settings: GameSettings,
+    pub actual_profile: PlayerProfile,
+    pub(crate) pending_profile: PlayerProfile,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -28,7 +30,7 @@ pub struct GameSettings {
     #[serde(with = "WindowModeDef")]
     pub window_display_mode: WindowMode,
 
-    pub inputs: InputMap<PlayerAction>
+    pub inputs: InputMap<PlayerAction>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -38,6 +40,20 @@ enum WindowModeDef {
     BorderlessFullscreen,
     SizedFullscreen,
     Fullscreen,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct PlayerProfile {
+    pub name: String,
+    pub phage: PhageVariant,
+}
+
+#[derive(Copy, Clone, Serialize, Deserialize, PartialEq)]
+pub enum PhageVariant {
+    Undecorated,
+    Antenna,
+    Cowboy,
+    Crown
 }
 
 impl Default for GameSettings {
@@ -64,7 +80,16 @@ impl Default for GameSettings {
                 (KeyCode::Right, PlayerAction::PanRight),
                 (KeyCode::Up, PlayerAction::PanUp),
                 (KeyCode::Down, PlayerAction::PanDown),
-            ])
+            ]),
+        }
+    }
+}
+
+impl Default for PlayerProfile {
+    fn default() -> Self {
+        PlayerProfile {
+            name: "".parse().unwrap(),
+            phage: PhageVariant::Undecorated,
         }
     }
 }
@@ -78,28 +103,58 @@ impl Plugin for SettingsPlugin {
     }
 }
 
+/// Loads the settings and player profile from disk.
 fn load_settings(
     mut command: Commands
 ) {
-    // deserialize the file we have
+    let mut settings = GameSettings{ ..default() };
+    let mut profile = PlayerProfile{ ..default() };
+
     if let Some(project_dirs) = ProjectDirs::from("", "", "macrophage") {
         let path = project_dirs.config_dir();
-        fs::create_dir_all(path).unwrap_or_else(|_| eprintln!("Error creating directories on config path {}.", path.display()));
+        fs::create_dir_all(path).unwrap_or_else(|_| {
+            eprintln!("Error creating directories on config path {}.", path.display())
+        });
+
+        // deserialize the settings file
         let file = File::open(path.join("settings.json"));
         match file {
             Ok(mut file) => {
                 let mut buffer = String::new();
                 let read_bytes = file.read_to_string(&mut buffer).unwrap_or(0);
                 if read_bytes > 0 {
-                    let settings: GameSettings = serde_json::from_str(&buffer).unwrap_or(GameSettings { ..default() });
-                    command.insert_resource(ReadWriteGameSettings { actual_settings: settings.clone(), pending_settings: settings.clone() });
-
+                    settings = serde_json::from_str(&buffer).unwrap_or(GameSettings { ..default() });
                     println!("Successfully loaded settings from settings.json: {}", buffer);
                 }
             },
-            Err(_) => println!("Couldn't access settings.json file; it may not exist yet."),
+            Err(_) => {
+                println!("Couldn't access settings.json file; it may not exist yet.")
+            },
         };
 
+        // deserialize the player profile file
+        let file = File::open(path.join("profile.json"));
+        match file {
+            Ok(mut file) => {
+                let mut buffer = String::new();
+                let read_bytes = file.read_to_string(&mut buffer).unwrap_or(0);
+                if read_bytes > 0 {
+                    profile = serde_json::from_str(&buffer).unwrap_or(PlayerProfile { ..default() });
+                    println!("Successfully loaded settings from profile.json: {}", buffer);
+                }
+            },
+            Err(_) => {
+                println!("Couldn't access profile.json file; it may not exist yet.")
+            },
+        };
+
+        // load
+        command.insert_resource(ReadWriteGameSettings {
+            actual_settings: settings.clone(),
+            pending_settings: settings,
+            actual_profile: profile.clone(),
+            pending_profile: profile,
+        });
     }
 
 }
@@ -108,8 +163,9 @@ fn changed_settings(
     game_settings: ResMut<ReadWriteGameSettings>,
     mut windows: ResMut<Windows>,
     mut player_controls: Query<&mut InputMap<PlayerAction>>,
+    mut loaded: Local<bool>
 ) {
-    if game_settings.is_changed() {
+    if game_settings.is_changed() || ! *loaded {
         // change display mode if needed
         let window = windows.get_primary_mut().unwrap();
         if game_settings.actual_settings.window_display_mode != window.mode() {
@@ -129,6 +185,8 @@ fn changed_settings(
                 panic!("[Changed Settings] Error: There is more than one InputMap!");
             }
         }
+
+        *loaded = true;
     }
 }
 

@@ -64,7 +64,7 @@ pub fn game_hud(
     let ctx = egui_context.ctx_mut();
 
     egui::Area::new("player avatar")
-        .anchor(Align2::LEFT_TOP, egui::vec2(-36., -36.))
+        .anchor(Align2::LEFT_TOP, egui::vec2(0., 0.))
         .fixed_pos(egui::pos2(0., 0.))
         .interactable(false)
         .show(ctx, |ui| {
@@ -94,7 +94,7 @@ pub fn game_hud(
         });
 
     egui::Area::new("opponent avatar")
-        .anchor(Align2::RIGHT_TOP, egui::vec2(36., -36.))
+        .anchor(Align2::RIGHT_TOP, egui::vec2(0., 0.))
         .fixed_pos(egui::pos2(0., 0.))
         .interactable(false)
         .show(ctx, |ui| {
@@ -109,7 +109,7 @@ pub fn game_hud(
             set_ui_style_none(ui);
             // TODO: hexes dont click well when overlapping
             // TODO: fork button to support hexagonal click area OR subset a small invisible button within.
-            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(83., 103.)));
+            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(80., 100.)));
             if btn.clicked() {
                 println!("Ability 1 used");
             }
@@ -123,21 +123,21 @@ pub fn game_hud(
             set_ui_style_none(ui);
             // TODO: hexes dont click well when overlapping
             // TODO: fork button to support hexagonal click area OR subset a small invisible button within.
-            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(83., 103.)));
+            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(80., 100.)));
             if btn.clicked() {
                 println!("Ability 2 used");
             }
         });
 
     egui::Area::new("ability_3")
-        .anchor(Align2::LEFT_BOTTOM, egui::vec2((100.), 0.))
+        .anchor(Align2::LEFT_BOTTOM, egui::vec2(100., 0.))
         .fixed_pos(egui::pos2(0., 0.))
         .interactable(true)
         .show(ctx, |ui| {
             set_ui_style_none(ui);
             // TODO: hexes dont click well when overlapping
             // TODO: fork button to support hexagonal click area OR subset a small invisible button within.
-            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(83., 103.)));
+            let btn = ui.add(egui::ImageButton::new(images.hex_button_id, egui::vec2(80., 100.)));
             if btn.clicked() {
                 println!("Ability 3 used");
             }
@@ -148,6 +148,6 @@ pub fn game_hud(
         .fixed_pos(egui::pos2(0., 0.))
         .interactable(true)
         .show(ctx, |ui| {
-            ui.image(images.quibit_icon_id, egui::vec2(100., 100.));
+            ui.image(images.quibit_icon_id, egui::vec2(50., 50.));
         });
 }
